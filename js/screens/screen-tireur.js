@@ -90,7 +90,7 @@ function bindTireurListBody(){
       const tireur = _tireurScreen.tireurs.find(function(t){ return t.id === btn.dataset.id; });
       if(!tireur) return;
       state.tireurCourant = tireur;
-      renderScreen("placeholder");
+      renderScreen("impact");
     });
   });
 
@@ -115,7 +115,7 @@ function bindTireurListBody(){
       try{
         const tireur = await createTireur({ nom: nom, club: club, poste: poste, lateralite: lateralite });
         state.tireurCourant = tireur;
-        renderScreen("placeholder");
+        renderScreen("impact");
       }catch(e){
         _tireurScreen.status = "error";
         refreshTireurListBody();
