@@ -1,12 +1,11 @@
 /*
- * Écran 3 — Saisie impact, boucle cœur (STORY-06a). Maquette et logique
- * d'enchaînement : docs/design/book-impact-gardien.md Écran 3, section
- * "Décision UX structurante". Résultat/Zone de tir/Zone de cage tapables
- * dans n'importe quel ordre ; enregistrement automatique dès que les champs
- * requis pour le résultat en cours sont complets — pas de bouton "Valider".
- *
- * Robustesse (verrouillage anti double-tap, bandeau d'erreur explicite,
- * annulation du dernier impact) : hors scope, cf. STORY-06b.
+ * Écran 3 — Saisie impact. Boucle cœur posée en STORY-06a (maquette et
+ * logique d'enchaînement : docs/design/book-impact-gardien.md Écran 3).
+ * Robustesse ajoutée en STORY-06b (mitigations P0-#1/P1-#2 de
+ * docs/risks/book-impact-gardien.md) :
+ *  - verrouillage anti double-tap pendant l'écriture (s.saving)
+ *  - bandeau d'erreur explicite qui NE réinitialise PAS la sélection
+ *  - bandeau de confirmation + bouton "Annuler" (supprime réellement l'impact)
  */
 
 const TYPE_TIR_OPTIONS = [
@@ -28,7 +27,16 @@ function isResultatCadre(resultat){
   return resultat === "but" || resultat === "arret" || resultat === "poteau";
 }
 
-let _impactScreen = { resultat: null, zoneTir: null, zoneCage: null, typeTir: null, main: null };
+function resultatLabel(value){
+  const o = RESULTAT_OPTIONS.find(function(o){ return o.value === value; });
+  return o ? o.label : value;
+}
+
+let _impactScreen = {
+  resultat: null, zoneTir: null, zoneCage: null, typeTir: null, main: null,
+  saving: false, errorMessage: null, lastSaved: null
+};
+let _confirmationTimer = null;
 
 function renderScreenImpact(){
   const t = state.tireurCourant;
@@ -58,27 +66,51 @@ function renderScreenImpact(){
     return `<button class="chip ${active}" data-action="pick-main" data-main="${m}">${m}</button>`;
   }).join("");
 
+  const inputLockedClass = s.saving ? "impact-locked" : "";
+
   return `
     <div class="screen-impact">
       ${header}
-      <div class="impact-section">
-        <div class="section-label">Résultat</div>
-        <div class="result-buttons">${resultButtons}</div>
-      </div>
-      <div class="impact-section">
-        <div class="section-label">Zone de tir</div>
-        <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="impact-court-svg">${courtSvgMarkup()}${renderCourtZonePicker(s.zoneTir)}</svg></div>
-      </div>
-      <div class="impact-section">
-        <div class="section-label">Zone de cage</div>
-        <div class="${cageLockedClass}">${renderGoalZoneGrid(s.zoneCage)}</div>
+      <div class="${inputLockedClass}">
+        <div class="impact-section">
+          <div class="section-label">Résultat</div>
+          <div class="result-buttons">${resultButtons}</div>
+        </div>
+        <div class="impact-section">
+          <div class="section-label">Zone de tir</div>
+          <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="impact-court-svg">${courtSvgMarkup()}${renderCourtZonePicker(s.zoneTir)}</svg></div>
+        </div>
+        <div class="impact-section">
+          <div class="section-label">Zone de cage</div>
+          <div class="${cageLockedClass}">${renderGoalZoneGrid(s.zoneCage)}</div>
+        </div>
       </div>
       <div class="impact-section quick-selectors">
         <div class="quick-row"><span class="quick-label">Type</span><div class="chip-row">${typeChips}</div></div>
         <div class="quick-row"><span class="quick-label">Main</span><div class="chip-row">${mainChips}</div></div>
       </div>
+      ${renderConfirmationBanner()}
     </div>
   `;
+}
+
+function renderConfirmationBanner(){
+  const s = _impactScreen;
+  if(s.errorMessage){
+    return `<div class="confirm-banner confirm-banner-error">
+      <span>${escapeHtml(s.errorMessage)}</span>
+      <button class="btn-cancel-impact" data-action="retry-save-impact">Réessayer</button>
+    </div>`;
+  }
+  if(!s.lastSaved) return "";
+  if(s.lastSaved.cancelled){
+    return `<div class="confirm-banner confirm-banner-cancel"><span>Impact annulé</span></div>`;
+  }
+  const cageText = s.lastSaved.zoneCage ? ` → ${escapeHtml(s.lastSaved.zoneCage)}` : "";
+  return `<div class="confirm-banner">
+    <span>✓ Impact enregistré — ${resultatLabel(s.lastSaved.resultat)}, ${escapeHtml(s.lastSaved.zoneTir)}${cageText}</span>
+    <button class="btn-cancel-impact" data-action="annuler-dernier-impact">Annuler</button>
+  </div>`;
 }
 
 function refreshImpactScreen(){
@@ -99,6 +131,7 @@ function bindScreenImpact(){
 
   document.querySelectorAll('[data-action="pick-resultat"]').forEach(function(btn){
     btn.addEventListener("click", function(){
+      if(_impactScreen.saving) return;
       _impactScreen.resultat = btn.dataset.resultat;
       if(!isResultatCadre(_impactScreen.resultat)) _impactScreen.zoneCage = null;
       refreshImpactScreen();
@@ -109,6 +142,7 @@ function bindScreenImpact(){
   const svg = document.getElementById("impact-court-svg");
   if(svg){
     bindCourtZonePicker(svg, function(zone){
+      if(_impactScreen.saving) return;
       _impactScreen.zoneTir = zone;
       refreshImpactScreen();
       tryAutoSaveImpact();
@@ -117,6 +151,7 @@ function bindScreenImpact(){
 
   document.querySelectorAll("[data-gz]").forEach(function(cell){
     cell.addEventListener("click", function(){
+      if(_impactScreen.saving) return;
       _impactScreen.zoneCage = cell.dataset.gz;
       refreshImpactScreen();
       tryAutoSaveImpact();
@@ -136,10 +171,24 @@ function bindScreenImpact(){
       refreshImpactScreen();
     });
   });
+
+  const retryBtn = document.querySelector('[data-action="retry-save-impact"]');
+  if(retryBtn){
+    retryBtn.addEventListener("click", function(){
+      _impactScreen.errorMessage = null;
+      saveImpact();
+    });
+  }
+
+  const cancelBtn = document.querySelector('[data-action="annuler-dernier-impact"]');
+  if(cancelBtn){
+    cancelBtn.addEventListener("click", handleAnnulerDernierImpact);
+  }
 }
 
 function tryAutoSaveImpact(){
   const s = _impactScreen;
+  if(s.saving) return;
   if(!s.resultat || !s.zoneTir) return;
   if(isResultatCadre(s.resultat) && !s.zoneCage) return;
   saveImpact();
@@ -147,6 +196,10 @@ function tryAutoSaveImpact(){
 
 async function saveImpact(){
   const s = _impactScreen;
+  s.saving = true;
+  s.errorMessage = null;
+  refreshImpactScreen();
+
   const payload = {
     gardien_id: state.gardienId,
     tireur_id: state.tireurCourant.id,
@@ -156,22 +209,54 @@ async function saveImpact(){
     type_tir: s.typeTir || null,
     main: s.main || null
   };
+
   try{
-    await createImpact(payload);
-    _impactScreen.resultat = null;
-    _impactScreen.zoneTir = null;
-    _impactScreen.zoneCage = null;
+    const impact = await createImpact(payload);
+    s.lastSaved = { id: impact.id, resultat: s.resultat, zoneTir: s.zoneTir, zoneCage: s.zoneCage };
+    s.resultat = null;
+    s.zoneTir = null;
+    s.zoneCage = null;
+    s.saving = false;
     refreshImpactScreen();
+    scheduleConfirmationDismiss(4000);
   }catch(e){
-    // Bandeau d'erreur explicite + conservation de la sélection : STORY-06b.
-    // Pour l'instant, on ne réinitialise pas la sélection (l'utilisateur peut
-    // retenter en re-tapant la zone de cage) mais on n'affiche rien de plus.
-    console.error("Échec de l'enregistrement de l'impact", e);
+    // P0-#1 : erreur explicite, sélection conservée — l'utilisateur peut
+    // retenter (bouton "Réessayer" ou re-tap direct sur la zone de cage).
+    s.saving = false;
+    s.errorMessage = "Échec de l'enregistrement — réessaie";
+    refreshImpactScreen();
   }
 }
 
+async function handleAnnulerDernierImpact(){
+  const s = _impactScreen;
+  if(!s.lastSaved || s.lastSaved.cancelled) return;
+  const id = s.lastSaved.id;
+  try{
+    await deleteImpact(id);
+    s.lastSaved = { cancelled: true };
+    refreshImpactScreen();
+    scheduleConfirmationDismiss(2000);
+  }catch(e){
+    // Échec de la suppression elle-même : le bandeau reste tel quel,
+    // l'utilisateur peut retaper "Annuler".
+  }
+}
+
+function scheduleConfirmationDismiss(delayMs){
+  clearTimeout(_confirmationTimer);
+  _confirmationTimer = setTimeout(function(){
+    _impactScreen.lastSaved = null;
+    refreshImpactScreen();
+  }, delayMs);
+}
+
 async function onMountScreenImpact(){
-  _impactScreen = { resultat: null, zoneTir: null, zoneCage: null, typeTir: null, main: null };
+  clearTimeout(_confirmationTimer);
+  _impactScreen = {
+    resultat: null, zoneTir: null, zoneCage: null, typeTir: null, main: null,
+    saving: false, errorMessage: null, lastSaved: null
+  };
   if(!state.tireurCourant) return;
   bindScreenImpact();
   try{

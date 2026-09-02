@@ -365,3 +365,55 @@ button{
   color: #0B131B;
   border-color: var(--accent);
 }
+
+/* Robustesse écran saisie — STORY-06b */
+.impact-locked{ opacity: .7; pointer-events: none; }
+
+.confirm-banner{
+  position: sticky;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  font-size: 13px;
+  color: var(--t1);
+  animation: confirmSlideUp .2s cubic-bezier(.4,0,.2,1), confirmFlash .4s ease-out;
+}
+.confirm-banner-error{
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.confirm-banner-cancel{
+  color: var(--t2);
+  justify-content: center;
+}
+.btn-cancel-impact{
+  flex-shrink: 0;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-s);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-cancel-impact:hover{ background: rgba(232,70,90,.1); }
+.btn-cancel-impact:active{ transform: scale(.95); }
+
+@keyframes confirmSlideUp{
+  from{ opacity: 0; transform: translateY(8px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+@keyframes confirmFlash{
+  0%{ background: var(--res-but-glow); }
+  100%{ background: var(--panel-2); }
+}
