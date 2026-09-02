@@ -1,0 +1,89 @@
+/*
+ * CSS pour les deux systèmes de zones — extrait de FENIX Stats CF (style.css)
+ * Copie ces tokens/classes, ou adapte les noms de variables à ta charte.
+ */
+
+/* ─── Tokens couleur du terrain SVG (référencés par terrain-zones.js) ─── */
+:root{
+  --court-fill: #0F1923;
+  --court-line: rgba(123,167,194,.55);
+  --court-line-dash: rgba(123,167,194,.35);
+  --court-goal: rgba(232,70,90,.6);
+  /* Utilisés aussi par les deux fichiers JS : adapte à ta charte */
+  --bg3: #1a2733;      /* fond d'une zone/case sans donnée */
+  --panel: #131f2b;    /* fond du panneau */
+  --t3: #6b7f91;       /* texte tertiaire (labels neutres) */
+  --border: rgba(123,167,194,.25);
+  --fenix-sky: #5FA8D3; /* accent — remplace par ta couleur de marque */
+}
+
+/* ─── Conteneur du terrain SVG (système 1 — zones du terrain) ─── */
+.court-pick{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 350/240; /* proche du viewBox 350×208 + marge basse pour l'effectif */
+  background-size: 100% 100%;
+}
+.court-svg-bg{
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* ─── Grille 3×3 de la cage (système 2 — zone de but/impact) ─── */
+/* Version "sélection" (pendant la saisie) : plus petite, dans un panneau */
+.goal-zone-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 1px;
+  width: 55%;
+  margin: 0 auto;
+  aspect-ratio: 5/2;
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  border-bottom: 3px solid var(--fenix-sky);
+}
+/* Variante "grande" utilisée pendant la saisie en direct (plus lisible au tap) */
+.goal-zone-grid.gz-big{
+  width: 100%;
+  aspect-ratio: 16/5;
+  font-size: 28px;
+  border-radius: 10px;
+  border-bottom: 3px solid var(--fenix-sky);
+}
+.gz-cell{
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  color: var(--t3);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: all .15s;
+}
+.gz-cell:active{ background: rgba(123,167,194,.3); }
+.gz-cell.active{
+  background: rgba(123,167,194,.3);
+  color: var(--fenix-sky);
+  border: 1px solid var(--fenix-sky);
+}
+
+/* ─── Bouton de bascule points/zones (optionnel, si tu reproduis ce toggle) ─── */
+.shotview-toggle{
+  display: inline-flex; gap: 2px;
+  background: var(--card, rgba(255,255,255,.03));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+}
+.shotview-btn{
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.shotview-btn:active{ transform: scale(.92); }
+.shotview-btn.on{ background: rgba(123,167,194,.16); }
