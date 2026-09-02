@@ -1,17 +1,22 @@
 /*
- * Écran 4 — Book tireur : stats + historique (STORY-07a). Maquette :
- * docs/design/book-impact-gardien.md Écran 4 (première moitié — les
- * heatmaps croisées terrain × cage arrivent en STORY-07b sur ce même écran).
+ * Écran 4 — Book tireur : stats + historique (STORY-07a) + heatmaps croisées
+ * terrain × cage (STORY-07b). Maquette : docs/design/book-impact-gardien.md
+ * Écran 4.
  *
  * Agrégation club-wide (tous gardiens confondus) pour les stats descriptives
- * du tireur, décision PM docs/prd.md §2.2. Le taux d'arrêt est filtré sur
- * le gardien actif uniquement.
+ * et les heatmaps du tireur, décision PM docs/prd.md §2.2. Le taux d'arrêt
+ * est filtré sur le gardien actif uniquement.
  *
- * Note d'interprétation (documentée en Code Review) : "poste favori" du PRD
- * est calculé à partir de zone_tir regroupée en 5 secteurs de style poste
- * (ZONE_TIR_GROUPS), pas depuis tireurs.poste (valeur fixe déjà affichée
- * dans le header — une stat dérivée de l'historique des tirs est plus
- * informative qu'une redite d'un champ statique).
+ * Note d'interprétation (documentée en Code Review STORY-07a) : "poste
+ * favori" du PRD est calculé à partir de zone_tir regroupée en 5 secteurs
+ * de style poste (ZONE_TIR_GROUPS), pas depuis tireurs.poste (valeur fixe
+ * déjà affichée dans le header).
+ *
+ * Heatmaps (STORY-07b) : terrain via renderCourtZoneHeatmap() (zone-picker.js,
+ * agrégation directe par code de zone — cf. docs/stories/STORY-07b, note
+ * d'implémentation) ; cage via goalZoneHeatmap() (vendor, réutilisée telle
+ * quelle). Un tap sur une zone terrain filtre la heatmap cage sur les
+ * impacts partant de cette zone.
  */
 
 const ZONE_TIR_GROUPS = {
@@ -61,7 +66,31 @@ function computeBookStats(impacts, gardienId){
   };
 }
 
-let _bookScreen = { status: "loading", impacts: [], stats: null };
+// Agrège les impacts par zone_tir pour la heatmap terrain (indépendant du
+// filtre courant — la heatmap terrain montre toujours l'agrégat complet).
+function computeCourtHeatmapData(impacts){
+  const data = {};
+  COURT_ZONE_ORDER.forEach(function(z){ data[z] = { g: 0, t: 0 }; });
+  impacts.forEach(function(i){
+    if(!data[i.zone_tir]) return;
+    data[i.zone_tir].t++;
+    if(i.resultat === "but") data[i.zone_tir].g++;
+  });
+  return data;
+}
+
+// Impacts → format attendu par goalZoneHeatmap() (vendor, inchangé).
+// Filtré sur filterZoneTir si fourni ; les hors_cadre (zone_cage null) sont
+// naturellement absents de la heatmap cage.
+function toGoalZoneShots(impacts, filterZoneTir){
+  return impacts
+    .filter(function(i){ return i.zone_cage && (!filterZoneTir || i.zone_tir === filterZoneTir); })
+    .map(function(i){
+      return { goalZone: i.zone_cage, isGoal: i.resultat === "but", isSave: i.resultat === "arret" };
+    });
+}
+
+let _bookScreen = { status: "loading", impacts: [], stats: null, filterZoneTir: null };
 
 function renderBookStats(stats){
   const notEnough = stats.total < 3;
@@ -84,6 +113,30 @@ function renderBookStats(stats){
     <div class="stat-card">${zoneBody}</div>
     <div class="stat-card">${tauxBody}</div>
   </div>`;
+}
+
+function renderBookHeatmaps(){
+  const s = _bookScreen;
+  const courtData = computeCourtHeatmapData(s.impacts);
+  const cageShots = toGoalZoneShots(s.impacts, s.filterZoneTir);
+
+  const resetChip = s.filterZoneTir
+    ? `<button class="chip-reset" data-action="reset-zone-filter">Tous ✕</button>`
+    : "";
+
+  return `
+    <div class="impact-section">
+      <div class="heatmap-header">
+        <div class="section-label">Zone de tir (tap pour filtrer)</div>
+        ${resetChip}
+      </div>
+      <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="book-court-svg">${courtSvgMarkup()}${renderCourtZoneHeatmap(courtData, s.filterZoneTir)}</svg></div>
+    </div>
+    <div class="impact-section">
+      <div class="section-label">Zone de cage</div>
+      <div class="cage-heatmap-wrap">${goalZoneHeatmap(cageShots, "100%")}</div>
+    </div>
+  `;
 }
 
 function renderHistoriqueRow(impact){
@@ -118,6 +171,7 @@ function renderScreenBook(){
   }else{
     body = `
       ${renderBookStats(s.stats)}
+      ${renderBookHeatmaps()}
       <div class="section-label book-history-label">Historique</div>
       <div class="historique-list">${s.impacts.map(renderHistoriqueRow).join("")}</div>
     `;
@@ -141,19 +195,35 @@ function bindScreenBook(){
   if(backBtn){
     backBtn.addEventListener("click", function(){ renderScreen("impact"); });
   }
+
+  const courtSvg = document.getElementById("book-court-svg");
+  if(courtSvg){
+    bindCourtZonePicker(courtSvg, function(zone){
+      _bookScreen.filterZoneTir = (_bookScreen.filterZoneTir === zone) ? null : zone;
+      refreshBookScreen();
+    });
+  }
+
+  const resetChip = document.querySelector('[data-action="reset-zone-filter"]');
+  if(resetChip){
+    resetChip.addEventListener("click", function(){
+      _bookScreen.filterZoneTir = null;
+      refreshBookScreen();
+    });
+  }
 }
 
 async function loadBookScreen(){
-  _bookScreen = { status: "loading", impacts: [], stats: null };
+  _bookScreen = { status: "loading", impacts: [], stats: null, filterZoneTir: null };
   refreshBookScreen();
   if(!state.tireurCourant) return;
   try{
     const impacts = await getImpactsForTireur(state.tireurCourant.id);
     const stats = computeBookStats(impacts, state.gardienId);
-    _bookScreen = { status: "ready", impacts: impacts, stats: stats };
+    _bookScreen = { status: "ready", impacts: impacts, stats: stats, filterZoneTir: null };
     refreshBookScreen();
   }catch(e){
-    _bookScreen = { status: "error", impacts: [], stats: null };
+    _bookScreen = { status: "error", impacts: [], stats: null, filterZoneTir: null };
     refreshBookScreen();
   }
 }

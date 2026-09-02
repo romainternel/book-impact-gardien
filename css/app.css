@@ -483,3 +483,49 @@ button{
 .badge-arret{ background: var(--res-arret-glow); color: var(--res-arret); }
 .badge-poteau{ background: var(--res-poteau-glow); color: var(--res-poteau); }
 .badge-hors_cadre{ background: var(--res-horscadre-glow); color: var(--res-horscadre); }
+
+/* Heatmaps croisées Book — STORY-07b */
+.heatmap-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.heatmap-header .section-label{ margin-bottom: 0; }
+.chip-reset{
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.chip-reset:active{ transform: scale(.95); }
+
+.zone-heat{
+  stroke: var(--court-line);
+  stroke-width: .6;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: filter .15s cubic-bezier(.4,0,.2,1), stroke .15s, stroke-width .15s;
+}
+.zone-heat:hover{ filter: brightness(1.1); }
+.zone-heat.zone-heat-active{
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.zone-heat-label{
+  font-size: 9px;
+  font-weight: 800;
+  fill: #fff;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: rgba(0,0,0,.45);
+  stroke-width: 1.6px;
+  pointer-events: none;
+}
+
+.cage-heatmap-wrap{ margin: 0 auto; }
