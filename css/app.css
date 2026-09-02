@@ -417,3 +417,69 @@ button{
   0%{ background: var(--res-but-glow); }
   100%{ background: var(--panel-2); }
 }
+
+/* Écran Book tireur — STORY-07a */
+.screen-book{ padding-top: 16px; }
+
+.stat-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat-card{
+  padding: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+.stat-value{
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1.1;
+  color: var(--t1);
+}
+.stat-hint{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t3);
+}
+.stat-label{
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: var(--t2);
+  margin-top: 4px;
+}
+
+.book-history-label{ margin-top: 4px; margin-bottom: 10px; }
+
+.historique-list{ display: flex; flex-direction: column; gap: 1px; }
+.historique-row{
+  display: grid;
+  grid-template-columns: 40px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.historique-date{ color: var(--t2); font-weight: 600; }
+.historique-contexte{ color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.historique-zones{ color: var(--t1); font-weight: 600; font-size: 12px; white-space: nowrap; }
+
+.badge{
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-but{ background: var(--res-but-glow); color: var(--res-but); }
+.badge-arret{ background: var(--res-arret-glow); color: var(--res-arret); }
+.badge-poteau{ background: var(--res-poteau-glow); color: var(--res-poteau); }
+.badge-hors_cadre{ background: var(--res-horscadre-glow); color: var(--res-horscadre); }
