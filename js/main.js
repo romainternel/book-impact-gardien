@@ -1,8 +1,7 @@
 /*
- * Bootstrap. À partir de STORY-03, l'écran de départ dépendra du gardien
- * déjà mémorisé en localStorage (cf. docs/architecture.md). Pour l'instant
- * (STORY-01), un seul écran placeholder valide que le pipeline de rendu
- * fonctionne de bout en bout.
+ * Bootstrap. Si un gardien est déjà mémorisé (localStorage), on saute
+ * l'écran de sélection et on arrive directement sur l'écran suivant —
+ * pour l'instant le placeholder, en attendant l'écran tireur (STORY-04).
  */
 
 registerScreen("placeholder", function(){
@@ -10,5 +9,12 @@ registerScreen("placeholder", function(){
 });
 
 document.addEventListener("DOMContentLoaded", function(){
-  renderScreen("placeholder");
+  const gardien = loadGardienFromStorage();
+  if(gardien){
+    state.gardienId = gardien.id;
+    state.gardienNom = gardien.nom;
+    renderScreen("placeholder");
+  }else{
+    renderScreen("gardien");
+  }
 });
