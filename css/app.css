@@ -78,3 +78,23 @@ button{
   letter-spacing: -0.2px;
   color: var(--t1);
 }
+
+/* Picker terrain (zone de tir) — STORY-05. Utilise le conteneur .court-pick
+   déjà défini dans zones.css. Fill plein (pas "none") sur chaque polygone :
+   nécessaire pour un hit-testing fiable sur les zones concaves (69MG/69MC/69MD),
+   cf. docs/architecture.md §5. */
+.zone-pick{
+  fill: var(--bg3);
+  stroke: var(--court-line);
+  stroke-width: .6;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: filter .15s cubic-bezier(.4,0,.2,1), stroke .15s, stroke-width .15s;
+}
+.zone-pick:hover{ filter: brightness(1.15); }
+.zone-pick:active{ filter: brightness(.9); }
+.zone-pick.active{
+  stroke: var(--accent);
+  stroke-width: 2;
+  filter: brightness(1.1);
+}
