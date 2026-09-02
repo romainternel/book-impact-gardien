@@ -59,7 +59,7 @@ function bindScreenGardien(){
       const gardien = _gardienScreen.gardiens.find(g => g.id === btn.dataset.id);
       if(!gardien) return;
       saveGardienToStorage(gardien);
-      renderScreen("placeholder");
+      renderScreen("tireur");
     });
   });
 
@@ -82,7 +82,7 @@ function bindScreenGardien(){
       try{
         const gardien = await createGardien(nom);
         saveGardienToStorage(gardien);
-        renderScreen("placeholder");
+        renderScreen("tireur");
       }catch(e){
         _gardienScreen.status = "error";
         reRenderScreenGardien();

@@ -107,6 +107,10 @@ button{
   min-height: 24px;
   margin-bottom: 12px;
 }
+.header-left{
+  display: flex;
+  align-items: center;
+}
 .header-title{
   font-size: 16px;
   font-weight: 700;
@@ -119,6 +123,15 @@ button{
   white-space: nowrap;
 }
 .header-link:hover{ text-decoration: underline; }
+.header-back{
+  color: var(--t1);
+  text-decoration: none;
+  font-size: 20px;
+  line-height: 1;
+  margin-right: 4px;
+  padding: 2px 4px;
+}
+.header-back:hover{ color: var(--accent); }
 
 /* Écran gardien — STORY-03 */
 .screen-gardien{ padding-top: 32px; }
@@ -212,3 +225,65 @@ button{
   padding: 24px 0;
 }
 .empty-state p{ margin: 0 0 12px; }
+
+/* Écran tireur — STORY-04 */
+.screen-tireur{ padding-top: 16px; }
+
+.search-input{
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  color: var(--t1);
+  font-size: 15px;
+}
+
+.tireur-row{ display: flex; flex-direction: column; gap: 2px; }
+.tireur-row-top{ display: flex; align-items: center; justify-content: space-between; }
+.tireur-nom{ font-weight: 700; }
+.tireur-lat{ color: var(--accent); font-size: 12px; font-weight: 700; }
+.tireur-meta{ color: var(--t2); font-size: 12px; font-weight: 500; }
+
+.empty-hint{
+  text-align: center;
+  color: var(--t2);
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.inline-create-tireur{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.inline-create-tireur input,
+.inline-create-tireur select{
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  color: var(--t1);
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.lat-toggle{ display: flex; gap: 8px; }
+.lat-btn{
+  flex: 1;
+  padding: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  color: var(--t2);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s cubic-bezier(.4,0,.2,1);
+}
+.lat-btn.active{
+  background: var(--accent);
+  color: #0B131B;
+  border-color: var(--accent);
+}

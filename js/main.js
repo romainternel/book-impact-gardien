@@ -1,7 +1,6 @@
 /*
  * Bootstrap. Si un gardien est déjà mémorisé (localStorage), on saute
- * l'écran de sélection et on arrive directement sur l'écran suivant —
- * pour l'instant le placeholder, en attendant l'écran tireur (STORY-04).
+ * l'écran de sélection et on arrive directement sur l'écran tireur.
  */
 
 registerScreen("placeholder", function(){
@@ -13,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function(){
   if(gardien){
     state.gardienId = gardien.id;
     state.gardienNom = gardien.nom;
-    renderScreen("placeholder");
+    renderScreen("tireur");
   }else{
     renderScreen("gardien");
   }
