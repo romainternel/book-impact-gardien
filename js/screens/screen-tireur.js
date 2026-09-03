@@ -24,10 +24,13 @@ function renderScreenTireur(){
 function renderTireurRow(t){
   const meta = [t.club, posteLabel(t.poste)].filter(Boolean).join(" · ");
   const lat = t.lateralite ? `<span class="tireur-lat">●${escapeHtml(t.lateralite)}</span>` : "";
-  return `<button class="list-card tireur-row" data-action="select-tireur" data-id="${escapeHtml(t.id)}">
-    <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(t.nom)}</span>${lat}</span>
-    ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
-  </button>`;
+  return `<div class="list-card-row">
+    <button class="list-card tireur-row" data-action="select-tireur" data-id="${escapeHtml(t.id)}">
+      <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(t.nom)}</span>${lat}</span>
+      ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
+    </button>
+    <button class="list-card-delete-btn" data-action="delete-tireur" data-id="${escapeHtml(t.id)}" data-nom="${escapeHtml(t.nom)}" title="Supprimer">🗑</button>
+  </div>`;
 }
 
 function renderTireurListBody(){
@@ -68,6 +71,16 @@ function bindTireurListBody(){
       if(!tireur) return;
       state.tireurCourant = tireur;
       renderScreen("impact");
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-tireur"]').forEach(function(btn){
+    btn.addEventListener("click", async function(evt){
+      evt.stopPropagation();
+      await confirmAndDelete(btn.dataset.id, btn.dataset.nom, deleteTireur, function(){
+        _tireurScreen.tireurs = _tireurScreen.tireurs.filter(function(t){ return t.id !== btn.dataset.id; });
+        refreshTireurListBody();
+      });
     });
   });
 

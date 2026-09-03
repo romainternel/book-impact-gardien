@@ -17,9 +17,12 @@ function renderScreenMatchs(){
 function renderMatchRow(m){
   const eqA = m.equipe_a ? m.equipe_a.nom : "?";
   const eqB = m.equipe_b ? m.equipe_b.nom : "?";
-  return `<div class="list-card match-row">
-    <span class="match-row-top">${escapeHtml(m.journee)} · ${escapeHtml(m.saison)}</span>
-    <span class="match-row-teams">${escapeHtml(eqA)} vs ${escapeHtml(eqB)}</span>
+  return `<div class="list-card-row">
+    <div class="list-card match-row">
+      <span class="match-row-top">${escapeHtml(m.journee)} · ${escapeHtml(m.saison)}</span>
+      <span class="match-row-teams">${escapeHtml(eqA)} vs ${escapeHtml(eqB)}</span>
+    </div>
+    <button class="list-card-delete-btn" data-action="delete-match" data-id="${escapeHtml(m.id)}" data-label="${escapeHtml(m.journee + ' ' + eqA + ' vs ' + eqB)}" title="Supprimer">🗑</button>
   </div>`;
 }
 
@@ -105,6 +108,15 @@ function bindMatchsListBody(){
       }
     });
   }
+
+  document.querySelectorAll('[data-action="delete-match"]').forEach(function(btn){
+    btn.addEventListener("click", async function(){
+      await confirmAndDelete(btn.dataset.id, btn.dataset.label, deleteMatch, function(){
+        _matchsScreen.matchs = _matchsScreen.matchs.filter(function(m){ return m.id !== btn.dataset.id; });
+        refreshMatchsListBody();
+      });
+    });
+  });
 
   const retry = document.querySelector('[data-action="retry-matchs"]');
   if(retry) retry.addEventListener("click", loadMatchs);

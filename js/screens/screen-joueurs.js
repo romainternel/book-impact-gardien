@@ -26,9 +26,12 @@ function renderScreenJoueurs(){
 function renderJoueurRow(j){
   const meta = posteLabel(j.poste);
   const lat = j.lateralite ? `<span class="tireur-lat">●${escapeHtml(j.lateralite)}</span>` : "";
-  return `<div class="list-card tireur-row">
-    <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(j.nom)}</span>${lat}</span>
-    ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
+  return `<div class="list-card-row">
+    <div class="list-card tireur-row">
+      <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(j.nom)}</span>${lat}</span>
+      ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
+    </div>
+    <button class="list-card-delete-btn" data-action="delete-joueur" data-id="${escapeHtml(j.id)}" data-nom="${escapeHtml(j.nom)}" title="Supprimer">🗑</button>
   </div>`;
 }
 
@@ -95,6 +98,15 @@ function bindJoueursListBody(){
   }
 
   bindLatToggle();
+
+  document.querySelectorAll('[data-action="delete-joueur"]').forEach(function(btn){
+    btn.addEventListener("click", async function(){
+      await confirmAndDelete(btn.dataset.id, btn.dataset.nom, deleteTireur, function(){
+        _joueursScreen.joueurs = _joueursScreen.joueurs.filter(function(j){ return j.id !== btn.dataset.id; });
+        refreshJoueursListBody();
+      });
+    });
+  });
 
   const retry = document.querySelector('[data-action="retry-joueurs"]');
   if(retry) retry.addEventListener("click", loadJoueurs);

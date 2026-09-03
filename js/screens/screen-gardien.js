@@ -23,9 +23,10 @@ function renderScreenGardien(){
       <button class="btn-secondary" data-action="retry">Réessayer</button>
     </div>`;
   } else {
-    const cards = s.gardiens.map(g =>
-      `<button class="list-card" data-action="select-gardien" data-id="${escapeHtml(g.id)}">${escapeHtml(g.nom)}</button>`
-    ).join("");
+    const cards = s.gardiens.map(g => `<div class="list-card-row">
+      <button class="list-card" data-action="select-gardien" data-id="${escapeHtml(g.id)}">${escapeHtml(g.nom)}</button>
+      <button class="list-card-delete-btn" data-action="delete-gardien" data-id="${escapeHtml(g.id)}" data-nom="${escapeHtml(g.nom)}" title="Supprimer">🗑</button>
+    </div>`).join("");
 
     const createBlock = s.creating
       ? `<div class="inline-create">
@@ -60,6 +61,17 @@ function bindScreenGardien(){
       if(!gardien) return;
       saveGardienToStorage(gardien);
       renderScreen("accueil");
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-gardien"]').forEach(function(btn){
+    btn.addEventListener("click", async function(evt){
+      evt.stopPropagation();
+      await confirmAndDelete(btn.dataset.id, btn.dataset.nom, deleteGardien, function(){
+        if(state.gardienId === btn.dataset.id) clearGardienFromStorage();
+        _gardienScreen.gardiens = _gardienScreen.gardiens.filter(function(g){ return g.id !== btn.dataset.id; });
+        reRenderScreenGardien();
+      });
     });
   });
 

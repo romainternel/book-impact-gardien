@@ -18,6 +18,13 @@ async function createGardien(nom){
   return data;
 }
 
+// STORY-15. Bloqué nativement par la contrainte FK (RESTRICT) si des impacts
+// référencent encore ce gardien — l'erreur 23503 remonte telle quelle.
+async function deleteGardien(id){
+  const { error } = await supabaseClient.from("gardiens").delete().eq("id", id);
+  if(error) throw error;
+}
+
 // Filtre nom/club côté serveur. Les caractères significatifs pour la
 // grammaire de filtre PostgREST (, ( )) sont retirés de la saisie avant
 // interpolation — validation à la frontière, la recherche reste tolérante
@@ -87,6 +94,13 @@ async function createTireur({ nom, club, poste, lateralite, equipe_id }){
   return data;
 }
 
+// STORY-15. Sert à la fois pour un tireur libre et un joueur d'équipe (même
+// table). Bloqué nativement par FK si des impacts référencent encore ce tireur.
+async function deleteTireur(id){
+  const { error } = await supabaseClient.from("tireurs").delete().eq("id", id);
+  if(error) throw error;
+}
+
 // Mode Match — STORY-11. Joueurs d'une équipe = tireurs filtrés par equipe_id.
 async function getJoueursByEquipe(equipeId){
   const { data, error } = await supabaseClient
@@ -147,6 +161,13 @@ async function createEquipe(nom){
   return data;
 }
 
+// STORY-15. Bloqué nativement par FK si des joueurs ou des matchs référencent
+// encore cette équipe.
+async function deleteEquipe(id){
+  const { error } = await supabaseClient.from("equipes").delete().eq("id", id);
+  if(error) throw error;
+}
+
 // Mode Match — STORY-12. `matchs` a deux FK vers `equipes` (equipe_a_id,
 // equipe_b_id) : embedding désambiguïsé obligatoire via le nom réel des
 // contraintes (vérifié en STORY-08), sinon PostgREST échoue ou est ambigu.
@@ -172,4 +193,10 @@ async function createMatch({ saison, journee, equipe_a_id, equipe_b_id }){
     .single();
   if(error) throw error;
   return data;
+}
+
+// STORY-15. Bloqué nativement par FK si des impacts référencent encore ce match.
+async function deleteMatch(id){
+  const { error } = await supabaseClient.from("matchs").delete().eq("id", id);
+  if(error) throw error;
 }

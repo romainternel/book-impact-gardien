@@ -20,7 +20,10 @@ function renderScreenEquipes(){
     </div>`;
   }else{
     const cards = s.equipes.map(function(e){
-      return `<button class="list-card" data-action="select-equipe" data-id="${escapeHtml(e.id)}">${escapeHtml(e.nom)}</button>`;
+      return `<div class="list-card-row">
+        <button class="list-card" data-action="select-equipe" data-id="${escapeHtml(e.id)}">${escapeHtml(e.nom)}</button>
+        <button class="list-card-delete-btn" data-action="delete-equipe" data-id="${escapeHtml(e.id)}" data-nom="${escapeHtml(e.nom)}" title="Supprimer">🗑</button>
+      </div>`;
     }).join("");
 
     const createBlock = s.creating
@@ -50,6 +53,16 @@ function bindScreenEquipes(){
       if(!equipe) return;
       state.equipeCourante = equipe;
       renderScreen("joueurs");
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-equipe"]').forEach(function(btn){
+    btn.addEventListener("click", async function(evt){
+      evt.stopPropagation();
+      await confirmAndDelete(btn.dataset.id, btn.dataset.nom, deleteEquipe, function(){
+        _equipesScreen.equipes = _equipesScreen.equipes.filter(function(e){ return e.id !== btn.dataset.id; });
+        reRenderScreenEquipes();
+      });
     });
   });
 
