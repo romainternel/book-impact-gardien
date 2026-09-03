@@ -16,11 +16,15 @@ const TYPE_TIR_OPTIONS = [
   { value: "penalty", label: "Penalty" }
 ];
 
+// "non_but" ajouté en STORY-14a (mode Match) — mitigation du risque #1 de
+// docs/risks/mode-match.md : sans cette entrée, resultatLabel('non_but')
+// afficherait la valeur brute dans le Book plutôt qu'un libellé lisible.
 const RESULTAT_OPTIONS = [
   { value: "but", label: "But" },
   { value: "arret", label: "Arrêt" },
   { value: "poteau", label: "Poteau" },
-  { value: "hors_cadre", label: "Hors cadre" }
+  { value: "hors_cadre", label: "Hors cadre" },
+  { value: "non_but", label: "Non-but" }
 ];
 
 function isResultatCadre(resultat){

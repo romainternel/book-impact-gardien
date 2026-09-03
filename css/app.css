@@ -361,8 +361,62 @@ button{
   background: color-mix(in srgb, var(--res-horscadre) 18%, var(--panel));
   color: var(--res-horscadre);
 }
+.result-btn.result-non_but.active{
+  box-shadow: 0 0 0 2px var(--res-horscadre), 0 0 14px var(--res-horscadre-glow);
+  background: color-mix(in srgb, var(--res-horscadre) 18%, var(--panel));
+  color: var(--res-horscadre);
+}
 
 .cage-locked{ opacity: .35; pointer-events: none; }
+
+/* Résultat 2 valeurs — écran Saisie Match (STORY-14a) */
+.result-buttons-2{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+/* Colonnes joueurs par équipe — STORY-14a */
+.team-rosters-row{ display: flex; gap: 12px; }
+.team-rosters-row .team-roster{ flex: 1; min-width: 0; }
+@media (max-width: 480px){
+  .team-rosters-row{ flex-direction: column; }
+}
+.team-roster{
+  border-top: 3px solid var(--team-color, var(--border));
+  padding-top: 10px;
+}
+.team-roster-a{ --team-color: var(--team-a); }
+.team-roster-b{ --team-color: var(--team-b); }
+.team-roster-label{
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  color: var(--team-color, var(--t2));
+  margin-bottom: 8px;
+}
+.player-btn{
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  color: var(--t1);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s cubic-bezier(.4,0,.2,1);
+}
+.player-btn:active{ transform: scale(.96); }
+.player-btn.active{
+  border-color: var(--team-color);
+  box-shadow: 0 0 0 1px var(--team-color);
+  color: var(--team-color);
+}
 
 .quick-row{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .quick-label{ font-size: 12px; color: var(--t2); width: 40px; flex-shrink: 0; }
@@ -502,6 +556,7 @@ button{
 .badge-arret{ background: var(--res-arret-glow); color: var(--res-arret); }
 .badge-poteau{ background: var(--res-poteau-glow); color: var(--res-poteau); }
 .badge-hors_cadre{ background: var(--res-horscadre-glow); color: var(--res-horscadre); }
+.badge-non_but{ background: var(--res-horscadre-glow); color: var(--res-horscadre); }
 
 /* Heatmaps croisées Book — STORY-07b */
 .heatmap-header{
