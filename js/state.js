@@ -14,6 +14,8 @@ const state = {
   dernierTypeTir: null,
   derniereMain: null,
   dernierImpact: null,
+  equipeCourante: null,
+  matchCourant: null,
 };
 
 function loadGardienFromStorage(){

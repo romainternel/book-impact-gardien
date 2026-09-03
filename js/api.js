@@ -116,3 +116,16 @@ async function getImpactsForTireur(tireurId){
   if(error) throw error;
   return data;
 }
+
+// Mode Match — STORY-10.
+async function getEquipes(){
+  const { data, error } = await supabaseClient.from("equipes").select("*").order("nom");
+  if(error) throw error;
+  return data;
+}
+
+async function createEquipe(nom){
+  const { data, error } = await supabaseClient.from("equipes").insert({ nom }).select().single();
+  if(error) throw error;
+  return data;
+}
