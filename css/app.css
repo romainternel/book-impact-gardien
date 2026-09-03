@@ -199,6 +199,23 @@ button{
 .list-card-delete-btn:hover{ background: rgba(232,70,90,.1); }
 .list-card-delete-btn:active{ transform: scale(.95); }
 
+/* Bouton d'édition — STORY-16 */
+.list-card-edit-btn{
+  flex-shrink: 0;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .15s cubic-bezier(.4,0,.2,1), transform .15s;
+}
+.list-card-edit-btn:hover{ background: var(--panel); }
+.list-card-edit-btn:active{ transform: scale(.95); }
+
 .inline-create{
   display: flex;
   gap: 8px;
@@ -304,6 +321,11 @@ button{
   font-size: 15px;
   font-family: inherit;
 }
+
+/* Actions du formulaire tireur/joueur (Enregistrer + Annuler) — STORY-16 */
+.inline-create-tireur-actions{ display: flex; gap: 8px; }
+.inline-create-tireur-actions .btn-primary,
+.inline-create-tireur-actions .btn-secondary{ flex: 1; }
 
 .match-row{ display: flex; flex-direction: column; gap: 2px; }
 .match-row-top{ font-size: 11px; font-weight: 700; color: var(--t2); text-transform: uppercase; letter-spacing: .3px; }

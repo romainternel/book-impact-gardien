@@ -7,7 +7,7 @@
  * nécessaire contrairement à screen-tireur.js).
  */
 
-let _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false };
+let _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false, editingId: null, saveError: "" };
 
 function renderScreenJoueurs(){
   const eq = state.equipeCourante;
@@ -31,6 +31,7 @@ function renderJoueurRow(j){
       <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(j.nom)}</span>${lat}</span>
       ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
     </div>
+    <button class="list-card-edit-btn" data-action="edit-joueur" data-id="${escapeHtml(j.id)}" title="Modifier">✏️</button>
     <button class="list-card-delete-btn" data-action="delete-joueur" data-id="${escapeHtml(j.id)}" data-nom="${escapeHtml(j.nom)}" title="Supprimer">🗑</button>
   </div>`;
 }
@@ -46,6 +47,18 @@ function renderJoueursListBody(){
   }
   if(s.creating){
     return renderCreateTireurForm({ showClub: false, submitLabel: "Créer" });
+  }
+  if(s.editingId){
+    const joueur = s.joueurs.find(function(j){ return j.id === s.editingId; });
+    const form = renderCreateTireurForm({
+      initial: joueur,
+      showClub: false,
+      submitLabel: "Enregistrer",
+      submitAction: "confirm-edit-tireur",
+      cancelAction: "cancel-edit-tireur"
+    });
+    const err = s.saveError ? `<p class="form-error">${escapeHtml(s.saveError)}</p>` : "";
+    return `${form}${err}`;
   }
 
   const query = s.query.trim().toLowerCase();
@@ -108,6 +121,43 @@ function bindJoueursListBody(){
     });
   });
 
+  document.querySelectorAll('[data-action="edit-joueur"]').forEach(function(btn){
+    btn.addEventListener("click", function(){
+      _joueursScreen.editingId = btn.dataset.id;
+      _joueursScreen.saveError = "";
+      refreshJoueursListBody();
+    });
+  });
+
+  const cancelEdit = document.querySelector('[data-action="cancel-edit-tireur"]');
+  if(cancelEdit){
+    cancelEdit.addEventListener("click", function(){
+      _joueursScreen.editingId = null;
+      _joueursScreen.saveError = "";
+      refreshJoueursListBody();
+    });
+  }
+
+  const confirmEdit = document.querySelector('[data-action="confirm-edit-tireur"]');
+  if(confirmEdit){
+    confirmEdit.addEventListener("click", async function(){
+      const fields = readTireurFormFields();
+      if(!fields.nom) return;
+      try{
+        const updated = await updateTireur(_joueursScreen.editingId, fields);
+        const idx = _joueursScreen.joueurs.findIndex(function(j){ return j.id === updated.id; });
+        if(idx !== -1) _joueursScreen.joueurs[idx] = updated;
+        _joueursScreen.joueurs.sort(function(a, b){ return a.nom.localeCompare(b.nom); });
+        _joueursScreen.editingId = null;
+        _joueursScreen.saveError = "";
+        refreshJoueursListBody();
+      }catch(e){
+        _joueursScreen.saveError = "Échec de l'enregistrement — réessaie.";
+        refreshJoueursListBody();
+      }
+    });
+  }
+
   const retry = document.querySelector('[data-action="retry-joueurs"]');
   if(retry) retry.addEventListener("click", loadJoueurs);
 }
@@ -115,6 +165,7 @@ function bindJoueursListBody(){
 async function loadJoueurs(){
   _joueursScreen.status = "loading";
   _joueursScreen.creating = false;
+  _joueursScreen.editingId = null;
   refreshJoueursListBody();
   try{
     const joueurs = await getJoueursByEquipe(state.equipeCourante.id);
@@ -128,7 +179,7 @@ async function loadJoueurs(){
 }
 
 function onMountScreenJoueurs(){
-  _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false };
+  _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false, editingId: null, saveError: "" };
   if(!state.equipeCourante) return;
   const input = document.getElementById("search-joueur");
   input.addEventListener("input", function(){

@@ -94,6 +94,26 @@ async function createTireur({ nom, club, poste, lateralite, equipe_id }){
   return data;
 }
 
+// STORY-16. Sert à la fois pour un tireur libre et un joueur d'équipe (même
+// table). La policy RLS "anon update tireurs" existe depuis STORY-02, jamais
+// utilisée côté frontend jusqu'ici. Ne touche jamais equipe_id (pas de UI de
+// transfert — cf. Hors scope de la story).
+async function updateTireur(id, { nom, club, poste, lateralite }){
+  const { data, error } = await supabaseClient
+    .from("tireurs")
+    .update({
+      nom,
+      club: club || null,
+      poste: poste || null,
+      lateralite: lateralite || null
+    })
+    .eq("id", id)
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}
+
 // STORY-15. Sert à la fois pour un tireur libre et un joueur d'équipe (même
 // table). Bloqué nativement par FK si des impacts référencent encore ce tireur.
 async function deleteTireur(id){

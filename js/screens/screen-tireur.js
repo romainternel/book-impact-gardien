@@ -8,7 +8,7 @@
  * (mode Match) via tireur-form-shared.js — cf. docs/arch/mode-match.md §6.
  */
 
-let _tireurScreen = { status: "loading", tireurs: [], query: "", creating: false };
+let _tireurScreen = { status: "loading", tireurs: [], query: "", creating: false, editingId: null, saveError: "" };
 let _tireurSearchDebounce = null;
 
 function renderScreenTireur(){
@@ -29,6 +29,7 @@ function renderTireurRow(t){
       <span class="tireur-row-top"><span class="tireur-nom">${escapeHtml(t.nom)}</span>${lat}</span>
       ${meta ? `<span class="tireur-meta">${escapeHtml(meta)}</span>` : ""}
     </button>
+    <button class="list-card-edit-btn" data-action="edit-tireur" data-id="${escapeHtml(t.id)}" title="Modifier">✏️</button>
     <button class="list-card-delete-btn" data-action="delete-tireur" data-id="${escapeHtml(t.id)}" data-nom="${escapeHtml(t.nom)}" title="Supprimer">🗑</button>
   </div>`;
 }
@@ -43,7 +44,18 @@ function renderTireurListBody(){
     return `<div class="empty-state"><p>Connexion impossible — réessaie</p><button class="btn-secondary" data-action="retry-tireur">Réessayer</button></div>`;
   }
   if(s.creating){
-    return renderCreateTireurForm({ prefillNom: s.query.trim(), submitLabel: "Créer et commencer" });
+    return renderCreateTireurForm({ initial: { nom: s.query.trim() }, submitLabel: "Créer et commencer" });
+  }
+  if(s.editingId){
+    const tireur = s.tireurs.find(function(t){ return t.id === s.editingId; });
+    const form = renderCreateTireurForm({
+      initial: tireur,
+      submitLabel: "Enregistrer",
+      submitAction: "confirm-edit-tireur",
+      cancelAction: "cancel-edit-tireur"
+    });
+    const err = s.saveError ? `<p class="form-error">${escapeHtml(s.saveError)}</p>` : "";
+    return `${form}${err}`;
   }
 
   const query = s.query.trim();
@@ -83,6 +95,43 @@ function bindTireurListBody(){
       });
     });
   });
+
+  document.querySelectorAll('[data-action="edit-tireur"]').forEach(function(btn){
+    btn.addEventListener("click", function(evt){
+      evt.stopPropagation();
+      _tireurScreen.editingId = btn.dataset.id;
+      _tireurScreen.saveError = "";
+      refreshTireurListBody();
+    });
+  });
+
+  const cancelEdit = document.querySelector('[data-action="cancel-edit-tireur"]');
+  if(cancelEdit){
+    cancelEdit.addEventListener("click", function(){
+      _tireurScreen.editingId = null;
+      _tireurScreen.saveError = "";
+      refreshTireurListBody();
+    });
+  }
+
+  const confirmEdit = document.querySelector('[data-action="confirm-edit-tireur"]');
+  if(confirmEdit){
+    confirmEdit.addEventListener("click", async function(){
+      const fields = readTireurFormFields();
+      if(!fields.nom) return;
+      try{
+        const updated = await updateTireur(_tireurScreen.editingId, fields);
+        const idx = _tireurScreen.tireurs.findIndex(function(t){ return t.id === updated.id; });
+        if(idx !== -1) _tireurScreen.tireurs[idx] = updated;
+        _tireurScreen.editingId = null;
+        _tireurScreen.saveError = "";
+        refreshTireurListBody();
+      }catch(e){
+        _tireurScreen.saveError = "Échec de l'enregistrement — réessaie.";
+        refreshTireurListBody();
+      }
+    });
+  }
 
   const startCreate = document.querySelector('[data-action="start-create-tireur"]');
   if(startCreate){
@@ -149,11 +198,12 @@ async function runTireurSearch(){
 }
 
 function onMountScreenTireur(){
-  _tireurScreen = { status: "loading", tireurs: [], query: "", creating: false };
+  _tireurScreen = { status: "loading", tireurs: [], query: "", creating: false, editingId: null, saveError: "" };
   const input = document.getElementById("search-tireur");
   input.addEventListener("input", function(){
     _tireurScreen.query = input.value;
     _tireurScreen.creating = false;
+    _tireurScreen.editingId = null;
     clearTimeout(_tireurSearchDebounce);
     _tireurSearchDebounce = setTimeout(runTireurSearch, 200);
   });
