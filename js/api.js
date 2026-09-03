@@ -71,12 +71,29 @@ async function getTireursRecents(gardienId, limit){
   return orderedIds.map(id => byId[id]).filter(Boolean);
 }
 
-async function createTireur({ nom, club, poste, lateralite }){
+async function createTireur({ nom, club, poste, lateralite, equipe_id }){
   const { data, error } = await supabaseClient
     .from("tireurs")
-    .insert({ nom, club: club || null, poste: poste || null, lateralite: lateralite || null })
+    .insert({
+      nom,
+      club: club || null,
+      poste: poste || null,
+      lateralite: lateralite || null,
+      equipe_id: equipe_id || null
+    })
     .select()
     .single();
+  if(error) throw error;
+  return data;
+}
+
+// Mode Match — STORY-11. Joueurs d'une équipe = tireurs filtrés par equipe_id.
+async function getJoueursByEquipe(equipeId){
+  const { data, error } = await supabaseClient
+    .from("tireurs")
+    .select("*")
+    .eq("equipe_id", equipeId)
+    .order("nom");
   if(error) throw error;
   return data;
 }

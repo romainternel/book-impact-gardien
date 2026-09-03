@@ -3,21 +3,10 @@
  * Écran 2. Recherche debouncée côté serveur ; par défaut (recherche vide),
  * affiche les tireurs les plus récemment consultés par ce gardien
  * (getTireursRecents, dérivé de impacts — cf. docs/architecture.md §4).
+ *
+ * POSTES et le formulaire de création sont partagés avec screen-joueurs.js
+ * (mode Match) via tireur-form-shared.js — cf. docs/arch/mode-match.md §6.
  */
-
-const POSTES = [
-  { value: "ailier_d", label: "Ailier D" },
-  { value: "ailier_g", label: "Ailier G" },
-  { value: "arriere_d", label: "Arrière D" },
-  { value: "arriere_g", label: "Arrière G" },
-  { value: "demi_centre", label: "Demi-centre" },
-  { value: "pivot", label: "Pivot" }
-];
-
-function posteLabel(value){
-  const p = POSTES.find(function(p){ return p.value === value; });
-  return p ? p.label : "";
-}
 
 let _tireurScreen = { status: "loading", tireurs: [], query: "", creating: false };
 let _tireurSearchDebounce = null;
@@ -51,19 +40,7 @@ function renderTireurListBody(){
     return `<div class="empty-state"><p>Connexion impossible — réessaie</p><button class="btn-secondary" data-action="retry-tireur">Réessayer</button></div>`;
   }
   if(s.creating){
-    return `<div class="inline-create-tireur">
-      <input type="text" id="new-tireur-nom" placeholder="Nom *" value="${escapeHtml(s.query.trim())}">
-      <input type="text" id="new-tireur-club" placeholder="Club">
-      <select id="new-tireur-poste">
-        <option value="">Poste (optionnel)</option>
-        ${POSTES.map(function(p){ return `<option value="${p.value}">${p.label}</option>`; }).join("")}
-      </select>
-      <div class="lat-toggle">
-        <button type="button" class="lat-btn" data-action="pick-lat" data-lat="D">D</button>
-        <button type="button" class="lat-btn" data-action="pick-lat" data-lat="G">G</button>
-      </div>
-      <button class="btn-primary" data-action="confirm-create-tireur">Créer et commencer</button>
-    </div>`;
+    return renderCreateTireurForm({ prefillNom: s.query.trim(), submitLabel: "Créer et commencer" });
   }
 
   const query = s.query.trim();
@@ -105,15 +82,10 @@ function bindTireurListBody(){
   const confirmCreate = document.querySelector('[data-action="confirm-create-tireur"]');
   if(confirmCreate){
     confirmCreate.addEventListener("click", async function(){
-      const nomInput = document.getElementById("new-tireur-nom");
-      const nom = (nomInput.value || "").trim();
-      if(!nom) return;
-      const club = (document.getElementById("new-tireur-club").value || "").trim();
-      const poste = document.getElementById("new-tireur-poste").value;
-      const latBtn = document.querySelector(".lat-btn.active");
-      const lateralite = latBtn ? latBtn.dataset.lat : "";
+      const fields = readTireurFormFields();
+      if(!fields.nom) return;
       try{
-        const tireur = await createTireur({ nom: nom, club: club, poste: poste, lateralite: lateralite });
+        const tireur = await createTireur(fields);
         state.tireurCourant = tireur;
         renderScreen("impact");
       }catch(e){
@@ -123,12 +95,7 @@ function bindTireurListBody(){
     });
   }
 
-  document.querySelectorAll('[data-action="pick-lat"]').forEach(function(btn){
-    btn.addEventListener("click", function(){
-      document.querySelectorAll(".lat-btn").forEach(function(b){ b.classList.remove("active"); });
-      btn.classList.add("active");
-    });
-  });
+  bindLatToggle();
 
   const retry = document.querySelector('[data-action="retry-tireur"]');
   if(retry) retry.addEventListener("click", loadTireurRecents);
