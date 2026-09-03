@@ -146,3 +146,30 @@ async function createEquipe(nom){
   if(error) throw error;
   return data;
 }
+
+// Mode Match — STORY-12. `matchs` a deux FK vers `equipes` (equipe_a_id,
+// equipe_b_id) : embedding désambiguïsé obligatoire via le nom réel des
+// contraintes (vérifié en STORY-08), sinon PostgREST échoue ou est ambigu.
+// Cf. docs/arch/mode-match.md §4.
+async function getMatchs(){
+  const { data, error } = await supabaseClient
+    .from("matchs")
+    .select(`
+      *,
+      equipe_a:equipes!matchs_equipe_a_id_fkey(id, nom),
+      equipe_b:equipes!matchs_equipe_b_id_fkey(id, nom)
+    `)
+    .order("journee", { ascending: false });
+  if(error) throw error;
+  return data;
+}
+
+async function createMatch({ saison, journee, equipe_a_id, equipe_b_id }){
+  const { data, error } = await supabaseClient
+    .from("matchs")
+    .insert({ saison, journee, equipe_a_id, equipe_b_id })
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}
