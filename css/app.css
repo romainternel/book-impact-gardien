@@ -286,6 +286,9 @@ button{
 
 .form-error{ font-size: 12px; color: var(--danger); margin: 0; }
 
+.match-row-launch{ gap: 10px; }
+.match-launch-btn{ align-self: flex-start; margin-top: 4px; padding: 8px 16px; font-size: 13px; }
+
 .lat-toggle{ display: flex; gap: 8px; }
 .lat-btn{
   flex: 1;
