@@ -25,7 +25,7 @@ let _tireurSearchDebounce = null;
 function renderScreenTireur(){
   return `
     <div class="screen-tireur">
-      ${renderAppHeader(state.gardienNom || "Gardien", { back: "gardien" })}
+      ${renderAppHeader(state.gardienNom || "Gardien", { back: "accueil" })}
       <input type="text" id="search-tireur" class="search-input" placeholder="Chercher un tireur..." autocomplete="off">
       <div id="tireur-list-body"></div>
     </div>

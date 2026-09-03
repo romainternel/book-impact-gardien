@@ -27,6 +27,13 @@
 
   --danger: #E8465A;
 
+  /* Distinction des deux équipes — mode Match. Réutilise des tokens déjà
+     définis plutôt que d'ajouter des teintes (docs/visual/mode-match.md §1). */
+  --team-a: var(--accent);
+  --team-a-glow: var(--accent-glow);
+  --team-b: var(--res-poteau);
+  --team-b-glow: var(--res-poteau-glow);
+
   --radius-s: 6px;
   --radius-m: 10px;
   --radius-l: 14px;
@@ -529,3 +536,27 @@ button{
 }
 
 .cage-heatmap-wrap{ margin: 0 auto; }
+
+/* Écran Accueil — STORY-09 */
+.screen-accueil{ padding-top: 24px; }
+
+.mode-card-list{ display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.mode-card{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 18px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s cubic-bezier(.4,0,.2,1), transform .15s;
+}
+.mode-card:hover{ background: var(--panel-2); }
+.mode-card:active{ transform: scale(.98); }
+.mode-card-icon{ font-size: 26px; flex-shrink: 0; }
+.mode-card-title{ display: block; font-size: 15px; font-weight: 700; color: var(--t1); }
+.mode-card-subtitle{ display: block; font-size: 12px; color: var(--t2); margin-top: 2px; }
