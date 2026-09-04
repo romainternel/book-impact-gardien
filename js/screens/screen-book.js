@@ -26,6 +26,21 @@ const ZONE_TIR_GROUPS = {
   "6MD": "Arrière D", "69MD": "Arrière D", "9MD": "Arrière D"
 };
 
+// Déplacés depuis screen-impact.js (supprimé en STORY-17) — encore
+// nécessaires pour le libellé du badge de résultat des impacts historiques.
+const RESULTAT_OPTIONS = [
+  { value: "but", label: "But" },
+  { value: "arret", label: "Arrêt" },
+  { value: "poteau", label: "Poteau" },
+  { value: "hors_cadre", label: "Hors cadre" },
+  { value: "non_but", label: "Non-but" }
+];
+
+function resultatLabel(value){
+  const o = RESULTAT_OPTIONS.find(function(o){ return o.value === value; });
+  return o ? o.label : value;
+}
+
 function computeBookStats(impacts, gardienId){
   const total = impacts.length;
 
@@ -158,7 +173,7 @@ function renderScreenBook(){
 
   const titleParts = [t.nom];
   const metaParts = [t.club, posteLabel(t.poste), t.lateralite ? (t.lateralite === "D" ? "Droitier" : "Gaucher") : null].filter(Boolean);
-  const header = renderAppHeader(titleParts.concat(metaParts.length ? [metaParts.join(" · ")] : []).join(" — "), { back: "impact" });
+  const header = renderAppHeader(titleParts.concat(metaParts.length ? [metaParts.join(" · ")] : []).join(" — "), { back: "tireur" });
 
   const s = _bookScreen;
   let body;
@@ -167,7 +182,7 @@ function renderScreenBook(){
   }else if(s.status === "error"){
     body = `<div class="empty-state"><p>Connexion impossible — réessaie</p><button class="btn-secondary" data-action="retry-book">Réessayer</button></div>`;
   }else if(s.impacts.length === 0){
-    body = `<div class="empty-state"><p>Aucun tir enregistré pour ce tireur</p><button class="btn-secondary" data-action="back-to-impact">Retour à la saisie</button></div>`;
+    body = `<div class="empty-state"><p>Aucun tir enregistré pour ce tireur</p><button class="btn-secondary" data-action="back-to-tireur">Retour</button></div>`;
   }else{
     body = `
       ${renderBookStats(s.stats)}
@@ -191,9 +206,9 @@ function bindScreenBook(){
   const retry = document.querySelector('[data-action="retry-book"]');
   if(retry) retry.addEventListener("click", loadBookScreen);
 
-  const backBtn = document.querySelector('[data-action="back-to-impact"]');
+  const backBtn = document.querySelector('[data-action="back-to-tireur"]');
   if(backBtn){
-    backBtn.addEventListener("click", function(){ renderScreen("impact"); });
+    backBtn.addEventListener("click", function(){ renderScreen("tireur"); });
   }
 
   const courtSvg = document.getElementById("book-court-svg");

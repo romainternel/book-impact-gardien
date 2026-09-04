@@ -354,8 +354,6 @@ button{
   border-color: var(--accent);
 }
 
-/* Écran saisie impact — STORY-06a */
-.screen-impact{ padding-top: 16px; }
 .impact-section{ margin-bottom: 20px; }
 .section-label{
   font-size: 11px;

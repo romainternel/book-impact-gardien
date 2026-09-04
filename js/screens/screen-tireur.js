@@ -82,7 +82,7 @@ function bindTireurListBody(){
       const tireur = _tireurScreen.tireurs.find(function(t){ return t.id === btn.dataset.id; });
       if(!tireur) return;
       state.tireurCourant = tireur;
-      renderScreen("impact");
+      renderScreen("book");
     });
   });
 
@@ -149,7 +149,7 @@ function bindTireurListBody(){
       try{
         const tireur = await createTireur(fields);
         state.tireurCourant = tireur;
-        renderScreen("impact");
+        renderScreen("book");
       }catch(e){
         _tireurScreen.status = "error";
         refreshTireurListBody();
