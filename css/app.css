@@ -421,12 +421,58 @@ button{
   gap: 8px;
 }
 
-/* Colonnes joueurs par équipe — STORY-14a */
-.team-rosters-row{ display: flex; gap: 12px; }
-.team-rosters-row .team-roster{ flex: 1; min-width: 0; }
-@media (max-width: 480px){
-  .team-rosters-row{ flex-direction: column; }
+/* Écran Saisie Match — layout restructuré en STORY-18a
+   (docs/arch/recentrage-match.md §2.4-2.5, docs/visual/recentrage-match.md §4).
+   .screen-saisie-match est une grille CSS ; header, rosters et bloc central
+   sont ses enfants directs (obligatoire pour que le placement en grille
+   s'applique à chacun individuellement). 3 paliers :
+   - < 480px (défaut) : 1 colonne, tout empilé pleine largeur.
+   - 480-759px : rosters en rangée à 2 colonnes sous le bloc central.
+   - ≥ 760px : rosters en colonnes latérales de part et d'autre du bloc
+     central, #app élargi via body:has() (cf. règle plus bas). */
+.screen-saisie-match{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
+.screen-saisie-match.match-saving .saisie-match-center,
+.screen-saisie-match.match-saving .team-roster{
+  opacity: .7;
+  pointer-events: none;
+}
+@media (min-width: 480px) and (max-width: 759.98px){
+  .screen-saisie-match{ grid-template-columns: 1fr 1fr; }
+  .screen-saisie-match .app-header{ grid-column: 1 / -1; }
+  .screen-saisie-match .saisie-match-center{ grid-column: 1 / -1; grid-row: 2; }
+  .screen-saisie-match .team-roster-a{ grid-column: 1; grid-row: 3; }
+  .screen-saisie-match .team-roster-b{ grid-column: 2; grid-row: 3; }
+  .screen-saisie-match .confirm-banner{ grid-column: 1 / -1; grid-row: 4; }
+}
+body:has(.screen-saisie-match) #app{
+  max-width: 920px;
+}
+@media (min-width: 760px){
+  .screen-saisie-match{
+    max-width: 920px;
+    margin: 0 auto;
+    grid-template-columns: 180px 1fr 180px;
+    align-items: start;
+  }
+  .screen-saisie-match .app-header,
+  .screen-saisie-match .confirm-banner{ grid-column: 1 / -1; }
+  .screen-saisie-match .team-roster-a{ grid-column: 1; grid-row: 2; }
+  .screen-saisie-match .saisie-match-center{ grid-column: 2; grid-row: 2; }
+  .screen-saisie-match .team-roster-b{ grid-column: 3; grid-row: 2; }
+  .screen-saisie-match .team-roster{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-m);
+    padding: 12px 10px;
+    border-top: 3px solid var(--team-color, var(--border));
+  }
+}
+
+/* Colonnes joueurs par équipe — STORY-14a */
 .team-roster{
   border-top: 3px solid var(--team-color, var(--border));
   padding-top: 10px;
@@ -483,9 +529,6 @@ button{
   color: #0B131B;
   border-color: var(--accent);
 }
-
-/* Robustesse écran saisie — STORY-06b */
-.impact-locked{ opacity: .7; pointer-events: none; }
 
 .confirm-banner{
   position: sticky;

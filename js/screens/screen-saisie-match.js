@@ -10,6 +10,15 @@
  * Résultat simplifié à 2 valeurs (but/non_but) — non_but se comporte comme
  * hors_cadre (pas de zone de cage requise), cf. docs/arch/mode-match.md §3.
  * Chaque impact porte match_id en plus de gardien_id/tireur_id.
+ *
+ * Layout restructuré en STORY-18a (docs/arch/recentrage-match.md §2.4-2.5) :
+ * ordre Résultat → Zone de cage → Zone de tir, rosters en enfants directs de
+ * .screen-saisie-match (plus de wrapper .team-rosters-row) pour permettre le
+ * placement en grille CSS 3 colonnes à partir de 760px. renderTeamRoster()
+ * n'est pas modifiée ; le verrouillage anti double-tap passe par une classe
+ * d'état sur le conteneur racine (.match-saving) plutôt que sur un wrapper
+ * autour des rosters, pour rester compatible avec le placement en grille
+ * (seuls les enfants directs de la grille participent au placement).
  */
 
 const MATCH_RESULTAT_OPTIONS = [
@@ -77,32 +86,27 @@ function renderScreenSaisieMatch(){
   }).join("");
 
   const cageLockedClass = s.resultat === "but" ? "" : "cage-locked";
-  const inputLockedClass = s.saving ? "impact-locked" : "";
+  const savingClass = s.saving ? "match-saving" : "";
 
   return `
-    <div class="screen-saisie-match">
+    <div class="screen-saisie-match ${savingClass}">
       ${header}
-      <div class="${inputLockedClass}">
+      ${renderTeamRoster(m.equipeA, "a")}
+      <div class="saisie-match-center">
         <div class="impact-section">
           <div class="section-label">Résultat</div>
           <div class="result-buttons-2">${resultButtons}</div>
-        </div>
-        <div class="impact-section">
-          <div class="section-label">Zone de tir</div>
-          <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="saisie-match-court-svg">${courtSvgMarkup()}${renderCourtZonePicker(s.zoneTir)}</svg></div>
         </div>
         <div class="impact-section">
           <div class="section-label">Zone de cage</div>
           <div class="${cageLockedClass}">${renderGoalZoneGrid(s.zoneCage)}</div>
         </div>
         <div class="impact-section">
-          <div class="section-label">Qui a tiré ?</div>
-          <div class="team-rosters-row">
-            ${renderTeamRoster(m.equipeA, "a")}
-            ${renderTeamRoster(m.equipeB, "b")}
-          </div>
+          <div class="section-label">Zone de tir</div>
+          <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="saisie-match-court-svg">${courtSvgMarkup()}${renderCourtZonePicker(s.zoneTir)}</svg></div>
         </div>
       </div>
+      ${renderTeamRoster(m.equipeB, "b")}
       ${renderMatchConfirmationBanner()}
     </div>
   `;
