@@ -17,6 +17,12 @@
  * d'implémentation) ; cage via goalZoneHeatmap() (vendor, réutilisée telle
  * quelle). Un tap sur une zone terrain filtre la heatmap cage sur les
  * impacts partant de cette zone.
+ *
+ * Habillage visuel réaliste (but/terrain, STORY-18b) généralisé à cet écran
+ * le 2026-09-04 : goalZoneHeatmap() enveloppée dans .goal-frame comme sur
+ * l'écran de saisie match, appelée sans modification. .court-pick (terrain)
+ * hérite du même cadrage via la règle CSS globale, aucun changement de
+ * markup nécessaire ici.
  */
 
 const ZONE_TIR_GROUPS = {
@@ -149,7 +155,11 @@ function renderBookHeatmaps(){
     </div>
     <div class="impact-section">
       <div class="section-label">Zone de cage</div>
-      <div class="cage-heatmap-wrap">${goalZoneHeatmap(cageShots, "100%")}</div>
+      <div class="goal-frame">
+        <div class="goal-frame-bar"></div>
+        <div class="cage-heatmap-wrap">${goalZoneHeatmap(cageShots, "100%")}</div>
+      </div>
+      <div class="goal-frame-ground-shadow"></div>
     </div>
   `;
 }

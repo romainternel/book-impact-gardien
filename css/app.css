@@ -512,7 +512,7 @@ body:has(.screen-saisie-match) #app{
   background: repeating-linear-gradient(90deg, var(--goal-post) 0 14px, var(--goal-post-stripe) 14px 28px);
   border-radius: 3px;
 }
-.goal-zone-grid.gz-big{
+.goal-zone-grid{
   position: relative;
   background-image:
     repeating-linear-gradient(45deg, var(--goal-net-line) 0 1px, transparent 1px 9px),
@@ -526,12 +526,13 @@ body:has(.screen-saisie-match) #app{
   background: radial-gradient(ellipse at center, rgba(0,0,0,.4) 0%, transparent 75%);
 }
 
-/* Terrain réaliste — STORY-18b (docs/visual/recentrage-match.md §3). Marge et
-   cadrage sur .court-pick (zones.css, vendu, inchangé) ; le SVG (inset:0)
-   se recale automatiquement dans la boîte de padding, sans changement de sa
-   géométrie ni de son viewBox. Scopé à cet écran pour ne pas affecter le
-   court-pick du Book (heatmap). */
-.screen-saisie-match .court-pick{
+/* Terrain réaliste — STORY-18b (docs/visual/recentrage-match.md §3), généralisé
+   à tout usage de .court-pick (saisie match ET heatmap du Book) le
+   2026-09-04 à la demande explicite de l'utilisateur ("toucher le visuel
+   partout"). Marge et cadrage sur .court-pick (zones.css, vendu, inchangé) ;
+   le SVG (inset:0) se recale automatiquement dans la boîte de padding, sans
+   changement de sa géométrie ni de son viewBox. */
+.court-pick{
   padding: 10px;
   background-image:
     repeating-linear-gradient(100grad, rgba(255,255,255,.015) 0 18px, transparent 18px 36px),
@@ -541,7 +542,7 @@ body:has(.screen-saisie-match) #app{
     inset 0 0 0 1px var(--pitch-surround-line),
     0 14px 28px -16px rgba(0,0,0,.6);
 }
-.screen-saisie-match .court-pick::after{
+.court-pick::after{
   content: "";
   position: absolute;
   inset: 10px;
