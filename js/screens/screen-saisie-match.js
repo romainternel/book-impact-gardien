@@ -19,6 +19,14 @@
  * d'état sur le conteneur racine (.match-saving) plutôt que sur un wrapper
  * autour des rosters, pour rester compatible avec le placement en grille
  * (seuls les enfants directs de la grille participent au placement).
+ *
+ * Habillage visuel réaliste ajouté en STORY-18b (docs/arch/recentrage-match.md,
+ * docs/visual/recentrage-match.md §2-3) : renderGoalZoneGrid() est enveloppée
+ * dans un nouveau conteneur décoratif .goal-frame (poteaux, barre, ombre au
+ * sol), appelée sans aucune modification de ses arguments. Le terrain
+ * (courtSvgMarkup()/renderCourtZonePicker()) n'est pas touché ici : son
+ * cadrage réaliste s'obtient entièrement en CSS sur .court-pick (marge,
+ * vignette), aucun changement de markup nécessaire.
  */
 
 const MATCH_RESULTAT_OPTIONS = [
@@ -99,7 +107,13 @@ function renderScreenSaisieMatch(){
         </div>
         <div class="impact-section">
           <div class="section-label">Zone de cage</div>
-          <div class="${cageLockedClass}">${renderGoalZoneGrid(s.zoneCage)}</div>
+          <div class="${cageLockedClass}">
+            <div class="goal-frame">
+              <div class="goal-frame-bar"></div>
+              ${renderGoalZoneGrid(s.zoneCage)}
+            </div>
+            <div class="goal-frame-ground-shadow"></div>
+          </div>
         </div>
         <div class="impact-section">
           <div class="section-label">Zone de tir</div>
