@@ -183,7 +183,7 @@ function renderScreenBook(){
 
   const titleParts = [t.nom];
   const metaParts = [t.club, posteLabel(t.poste), t.lateralite ? (t.lateralite === "D" ? "Droitier" : "Gaucher") : null].filter(Boolean);
-  const header = renderAppHeader(titleParts.concat(metaParts.length ? [metaParts.join(" · ")] : []).join(" — "), { back: "tireur" });
+  const header = renderAppHeader(titleParts.concat(metaParts.length ? [metaParts.join(" · ")] : []).join(" — "), { back: state.bookBackTarget || "tireur" });
 
   const s = _bookScreen;
   let body;
@@ -218,7 +218,7 @@ function bindScreenBook(){
 
   const backBtn = document.querySelector('[data-action="back-to-tireur"]');
   if(backBtn){
-    backBtn.addEventListener("click", function(){ renderScreen("tireur"); });
+    backBtn.addEventListener("click", function(){ renderScreen(state.bookBackTarget || "tireur"); });
   }
 
   const courtSvg = document.getElementById("book-court-svg");

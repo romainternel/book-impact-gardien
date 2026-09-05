@@ -16,6 +16,7 @@ const state = {
   dernierImpact: null,
   equipeCourante: null,
   matchCourant: null,
+  bookBackTarget: null,
 };
 
 function loadGardienFromStorage(){

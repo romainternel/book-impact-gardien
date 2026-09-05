@@ -307,6 +307,15 @@ button{
 .tireur-lat{ color: var(--accent); font-size: 12px; font-weight: 700; }
 .tireur-meta{ color: var(--t2); font-size: 12px; font-weight: 500; }
 
+/* Écran Book — Équipes — STORY-19 */
+.book-recents{ margin-bottom: 16px; }
+.list-card-nav{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--accent);
+}
+
 .empty-hint{
   text-align: center;
   color: var(--t2);

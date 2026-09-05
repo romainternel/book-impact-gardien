@@ -8,7 +8,7 @@ function renderScreenAccueil(){
   const header = renderAppHeader(state.gardienNom || "Book Impact Gardien", { showChangeGardien: true });
 
   const modes = [
-    { icon: "📖", title: "Book par tireur", subtitle: "Scouter un tireur adverse", screen: "tireur" },
+    { icon: "📖", title: "Book par tireur", subtitle: "Scouter un tireur adverse", screen: "book-equipes" },
     { icon: "⚽", title: "Saisir un match", subtitle: "Documenter un match complet", screen: "selection-match" },
     { icon: "⚙️", title: "Paramètres", subtitle: "Équipes, joueurs, matchs", screen: "parametres" }
   ];

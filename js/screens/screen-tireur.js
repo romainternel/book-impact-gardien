@@ -14,7 +14,7 @@ let _tireurSearchDebounce = null;
 function renderScreenTireur(){
   return `
     <div class="screen-tireur">
-      ${renderAppHeader(state.gardienNom || "Gardien", { back: "accueil" })}
+      ${renderAppHeader(state.gardienNom || "Gardien", { back: "book-equipes" })}
       <input type="text" id="search-tireur" class="search-input" placeholder="Chercher un tireur..." autocomplete="off">
       <div id="tireur-list-body"></div>
     </div>
@@ -82,6 +82,7 @@ function bindTireurListBody(){
       const tireur = _tireurScreen.tireurs.find(function(t){ return t.id === btn.dataset.id; });
       if(!tireur) return;
       state.tireurCourant = tireur;
+      state.bookBackTarget = "tireur";
       renderScreen("book");
     });
   });
@@ -149,6 +150,7 @@ function bindTireurListBody(){
       try{
         const tireur = await createTireur(fields);
         state.tireurCourant = tireur;
+        state.bookBackTarget = "tireur";
         renderScreen("book");
       }catch(e){
         _tireurScreen.status = "error";
