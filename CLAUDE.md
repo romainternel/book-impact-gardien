@@ -31,8 +31,10 @@
     header.js                   — header partagé (titre, bouton retour, lien "Changer de gardien" ou lien contextuel)
     screen-gardien.js           — écran 1 : sélection/création/suppression du gardien actif
     screen-accueil.js           — hub : Book par tireur / Saisir un match / Paramètres
-    screen-tireur.js            — écran 2 : recherche/création/édition/suppression tireur (entrée mode Book)
-    screen-book.js              — écran 4 : stats + historique + heatmaps croisées par tireur (accès direct depuis screen-tireur.js — plus d'écran de saisie autonome, cf. STORY-17)
+    screen-tireur.js            — écran 2 : recherche/édition/suppression tireur, création (avec ou sans équipe) — accès secondaire depuis "Book — Équipes", seul chemin vers les tireurs libres (cf. STORY-19)
+    screen-book-equipes.js      — écran "Book — Équipes" : nouveau point d'entrée de "Book par tireur" (récents + lien recherche + liste d'équipes), cf. STORY-19
+    screen-book-joueurs.js      — écran "Book — Joueurs d'une équipe" : roster en lecture seule, tap joueur → Book direct, cf. STORY-19
+    screen-book.js              — écran 4 : stats + historique + heatmaps croisées par tireur (cible de retour dynamique via state.bookBackTarget selon le chemin d'entrée — recherche/récents/roster d'équipe, cf. STORY-19)
     screen-parametres.js        — hub secondaire : Équipes / Joueurs / Matchs
     screen-equipes.js           — CRUD équipe
     screen-joueurs.js           — CRUD joueur d'une équipe (réutilise tireur-form-shared.js)
@@ -86,17 +88,17 @@ Aucune authentification utilisateur. Un seul rôle applicatif Supabase : `anon`.
 - Pas de gestion de conflit concurrent : dernier écrit gagne si le même gardien utilise l'app sur deux appareils simultanément (accepté, usage mono-appareil typique).
 
 ## 9. État d'avancement actuel
-**22 stories livrées et validées à tous les stades** (code review APPROUVÉ, QA PASSED, E2E CONFIRMÉ, régression RAS jusqu'à v0.22.0). Dernière livraison : STORY-18b (habillage visuel réaliste but/terrain).
+**23 stories livrées et validées à tous les stades** (code review APPROUVÉ, QA PASSED, E2E CONFIRMÉ, régression RAS jusqu'à v0.23.0). Dernière livraison : STORY-19 (navigation "Book par tireur" par équipe puis joueur).
 
 Fonctionnalités en production :
 - [x] Sélection/création/suppression du gardien actif (mémorisé en localStorage)
-- [x] Recherche, création, édition, suppression d'un tireur ; accès direct au Book depuis la sélection/création (plus d'écran de saisie autonome — toute la saisie de tir passe désormais par le mode Match, STORY-17)
+- [x] "Book par tireur" : navigation par équipe puis joueur (accès direct au Book, STORY-17/19) ; recherche/création/édition/suppression d'un tireur conservée en accès secondaire, seul chemin restant vers les tireurs libres (sans équipe)
 - [x] Book par tireur : stats agrégées, historique, heatmaps croisées terrain × cage avec filtre par zone
 - [x] Mode Match complet : Accueil, Paramètres, CRUD équipes/joueurs/matchs, sélection de match, saisie de match (but/non-but, zone, joueur), même robustesse que le mode Book. Écran de saisie : layout responsive 3 paliers (pile <480px / 2 colonnes 480-759px / colonnes latérales ≥760px), habillage visuel réaliste du but et du terrain (STORY-18a/18b)
 - [x] Suppression avec confirmation pour gardiens/tireurs/équipes/matchs, protégée par contraintes FK
 - [x] Policies RLS resserrées par opération et par table, auditées sans finding critique/majeur
 
-Rien en cours au moment de cette analyse — le backlog "recentrage-match" (STORY-17/18a/18b) est clos.
+Rien en cours au moment de cette analyse.
 
 ## 10. Décisions techniques en attente / roadmap
 - Backlog V2 explicite (docs/prd.md §5) : heatmap fine, comparaison entre tireurs, filtres par match, export — non commencés.
@@ -105,3 +107,4 @@ Rien en cours au moment de cette analyse — le backlog "recentrage-match" (STOR
 - Contrainte `journee` par regex (`J01`-`J22`) : ne couvre pas les matchs hors championnat — critère de bascule : table `journees` de référence si le besoin apparaît.
 - Critères de bascule déjà actés : recherche full-text Postgres si la liste de tireurs dépasse quelques centaines d'entrées ; vue Postgres/RPC pour les stats du Book au-delà de quelques milliers d'impacts par tireur ; Supabase Auth si l'app doit un jour dépasser un usage interne restreint.
 - Généralisation possible de l'élargissement conditionnel de `#app` (`body:has(.screen-saisie-match)`) : si un jour plusieurs écrans ont besoin de dépasser 480px, remplacer par une classe générique `body:has(.screen-wide)` posée sur chaque écran concerné plutôt que d'empiler des sélecteurs `:has()` un par un — non nécessaire tant qu'un seul écran est concerné (critère déjà acté en architecture, `docs/arch/recentrage-match.md` §6).
+- `state.bookBackTarget` (STORY-19) : cible de retour dynamique du Book, positionnée par l'écran appelant avant chaque `renderScreen("book")`. Si un futur écran ajoute un 4e chemin d'entrée vers le Book, penser à positionner ce champ avant la navigation — repli silencieux sur `"tireur"` sinon (pas un crash, mais une navigation de retour incorrecte).
