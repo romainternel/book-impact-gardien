@@ -5,6 +5,12 @@
  * aucune duplication du référentiel POSTES ni du markup de création.
  * Filtrage client-side (volume par équipe faible, pas de recherche serveur
  * nécessaire contrairement à screen-tireur.js).
+ *
+ * Correctif Audit Final 2026-09-05 : cet écran est accessible directement
+ * depuis Paramètres sans passer par "Équipes" — sans state.equipeCourante
+ * déjà positionné, l'état vide "Aucune équipe sélectionnée" n'avait ni
+ * header ni bouton retour (cul-de-sac total, seul un rechargement de page
+ * en sortait). Header + lien retour ajoutés à cet état pour ce cas.
  */
 
 let _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false, editingId: null, saveError: "" };
@@ -12,7 +18,7 @@ let _joueursScreen = { status: "loading", joueurs: [], query: "", creating: fals
 function renderScreenJoueurs(){
   const eq = state.equipeCourante;
   if(!eq){
-    return `<div class="screen-placeholder">Aucune équipe sélectionnée</div>`;
+    return `<div class="screen-joueurs">${renderAppHeader("Joueurs", { back: "equipes" })}<div class="screen-placeholder">Aucune équipe sélectionnée</div></div>`;
   }
   return `
     <div class="screen-joueurs">
@@ -180,13 +186,13 @@ async function loadJoueurs(){
 
 function onMountScreenJoueurs(){
   _joueursScreen = { status: "loading", joueurs: [], query: "", creating: false, editingId: null, saveError: "" };
+  bindAppHeader();
   if(!state.equipeCourante) return;
   const input = document.getElementById("search-joueur");
   input.addEventListener("input", function(){
     _joueursScreen.query = input.value;
     refreshJoueursListBody();
   });
-  bindAppHeader();
   loadJoueurs();
 }
 
