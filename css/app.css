@@ -502,7 +502,7 @@ body:has(.screen-saisie-match) #app{
    ::after) sont ajoutés en overlay depuis ce fichier. */
 .goal-frame{
   position: relative;
-  padding: 16px 12px 6px;
+  padding: 20px 8px 6px;
   background:
     radial-gradient(120% 60% at 50% 0%, rgba(232,237,240,.08) 0%, transparent 60%),
     linear-gradient(180deg, #0d1620 0%, var(--panel-2) 100%);
@@ -511,23 +511,27 @@ body:has(.screen-saisie-match) #app{
     0 14px 30px -14px var(--goal-shadow),
     inset 0 1px 0 rgba(232,237,240,.06);
 }
+/* Poteaux et barre transversale partagent désormais le même repère
+   (position absolute ancrée sur les bords de .goal-frame) — avant, la barre
+   était un élément de flux normal décalé par le padding du conteneur (16px)
+   alors que les poteaux étaient ancrés à 4px : les coins ne se rejoignaient
+   pas, d'où l'écart visible signalé par l'utilisateur. Largeur des poteaux
+   (8px) = position gauche/droite de la barre, pour un raccord pixel-perfect. */
 .goal-frame::before, .goal-frame::after{
   content: "";
   position: absolute;
-  top: 4px; bottom: 0;
-  width: 7px;
+  top: 0; bottom: 0;
+  width: 8px;
   background: repeating-linear-gradient(-45deg, var(--goal-post) 0 6px, var(--goal-post-stripe) 6px 12px);
-  border-radius: 4px;
   box-shadow: 0 0 8px rgba(232,237,240,.35), inset 0 0 0 1px rgba(0,0,0,.25);
 }
-.goal-frame::before{ left: 4px; }
-.goal-frame::after{ right: 4px; }
+.goal-frame::before{ left: 0; border-radius: 4px 0 0 4px; }
+.goal-frame::after{ right: 0; border-radius: 0 4px 4px 0; }
 .goal-frame-bar{
-  position: relative;
+  position: absolute;
+  top: 0; left: 8px; right: 8px;
   height: 8px;
-  margin: 0 4px 10px;
   background: repeating-linear-gradient(90deg, var(--goal-post) 0 14px, var(--goal-post-stripe) 14px 28px);
-  border-radius: 4px;
   box-shadow: 0 0 8px rgba(232,237,240,.35), inset 0 -2px 0 rgba(0,0,0,.25);
 }
 .goal-zone-grid{
