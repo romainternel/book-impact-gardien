@@ -27,6 +27,17 @@
  * (courtSvgMarkup()/renderCourtZonePicker()) n'est pas touché ici : son
  * cadrage réaliste s'obtient entièrement en CSS sur .court-pick (marge,
  * vignette), aucun changement de markup nécessaire.
+ *
+ * Listing des tirs saisis + correction/suppression a posteriori (retour
+ * utilisateur 2026-09-09 : la fenêtre de 4s du bandeau "Annuler" est trop
+ * courte pour repérer une erreur remarquée plus tard, "ça peut être quelques
+ * tireurs avant"). `impacts` n'autorise jamais l'UPDATE côté RLS (cf.
+ * CLAUDE.md §5) : "modifier" est donc implémenté en insert-puis-delete (jamais
+ * l'inverse, pour ne perdre aucune donnée si l'insert échoue), en réutilisant
+ * les mêmes pickers que la saisie normale plutôt qu'un formulaire dédié — on
+ * pré-remplit resultat/zoneTir/zoneCage/joueurId depuis l'impact visé, et la
+ * sauvegarde automatique déjà en place (tryAutoSaveMatch) fait le reste dès
+ * que l'utilisateur retape le champ à corriger.
  */
 
 const MATCH_RESULTAT_OPTIONS = [
@@ -36,9 +47,16 @@ const MATCH_RESULTAT_OPTIONS = [
 
 let _saisieMatchScreen = {
   resultat: null, zoneTir: null, zoneCage: null, joueurId: null,
-  saving: false, errorMessage: null, lastSaved: null
+  saving: false, errorMessage: null, lastSaved: null,
+  showListe: false, listeStatus: "idle", matchImpacts: [],
+  editingImpactId: null, editingOriginalNom: null
 };
 let _confirmationTimerMatch = null;
+
+function matchResultatLabel(resultat){
+  const opt = MATCH_RESULTAT_OPTIONS.find(function(o){ return o.value === resultat; });
+  return opt ? opt.label : resultat;
+}
 
 function findJoueurNom(joueurId){
   const m = state.matchCourant;
@@ -74,10 +92,52 @@ function renderMatchConfirmationBanner(){
   }
   const cageText = s.lastSaved.zoneCage ? ` → ${escapeHtml(s.lastSaved.zoneCage)}` : "";
   const label = s.lastSaved.resultat === "but" ? "But" : "Non-but";
+  const prefix = s.lastSaved.edited ? "✓ Modifié" : `✓ ${label}`;
   return `<div class="confirm-banner">
-    <span>✓ ${label} — ${escapeHtml(s.lastSaved.joueurNom)}, ${escapeHtml(s.lastSaved.zoneTir)}${cageText}</span>
+    <span>${prefix} — ${escapeHtml(s.lastSaved.joueurNom)}, ${escapeHtml(s.lastSaved.zoneTir)}${cageText}</span>
     <button class="btn-cancel-impact" data-action="annuler-dernier-impact-match">Annuler</button>
   </div>`;
+}
+
+function renderEditingBanner(){
+  const s = _saisieMatchScreen;
+  if(!s.editingImpactId) return "";
+  return `<div class="confirm-banner">
+    <span>✏️ Modification du tir de ${escapeHtml(s.editingOriginalNom || "")} — retape le(s) champ(s) à corriger</span>
+    <button class="btn-cancel-impact" data-action="cancel-edit-impact-match">Annuler</button>
+  </div>`;
+}
+
+function renderMatchImpactRow(impact){
+  const cage = impact.zone_cage ? " → " + escapeHtml(impact.zone_cage) : "";
+  const label = matchResultatLabel(impact.resultat);
+  const nom = impact.tireurs ? impact.tireurs.nom : "";
+  const confirmLabel = `${nom} (${label}, ${impact.zone_tir}${impact.zone_cage ? " → " + impact.zone_cage : ""})`;
+  return `<div class="list-card-row">
+    <div class="list-card impact-row">
+      <div class="impact-row-top">
+        <span class="impact-row-joueur">${escapeHtml(nom)}</span>
+        <span class="badge badge-${escapeHtml(impact.resultat)}">${escapeHtml(label)}</span>
+      </div>
+      <span class="impact-row-zones">${escapeHtml(impact.zone_tir)}${cage}</span>
+    </div>
+    <button class="list-card-edit-btn" data-action="edit-impact-match" data-id="${escapeHtml(impact.id)}" title="Modifier">✏️</button>
+    <button class="list-card-delete-btn" data-action="delete-impact-match" data-id="${escapeHtml(impact.id)}" data-label="${escapeHtml(confirmLabel)}" title="Supprimer">🗑</button>
+  </div>`;
+}
+
+function renderImpactsListeBody(){
+  const s = _saisieMatchScreen;
+  if(s.listeStatus === "loading" && s.matchImpacts.length === 0){
+    return `<div class="skeleton-list"><div class="skeleton-row"></div><div class="skeleton-row"></div></div>`;
+  }
+  if(s.listeStatus === "error"){
+    return `<div class="empty-state"><p>Connexion impossible — réessaie</p><button class="btn-secondary" data-action="retry-impacts-liste">Réessayer</button></div>`;
+  }
+  if(s.matchImpacts.length === 0){
+    return `<p class="empty-hint">Aucun tir saisi pour ce match</p>`;
+  }
+  return s.matchImpacts.map(renderMatchImpactRow).join("");
 }
 
 function renderScreenSaisieMatch(){
@@ -86,7 +146,23 @@ function renderScreenSaisieMatch(){
     return `<div class="screen-placeholder">Aucun match sélectionné</div>`;
   }
   const s = _saisieMatchScreen;
-  const header = renderAppHeader(m.journee + " · " + m.equipeA.nom + " vs " + m.equipeB.nom, { back: "selection-match" });
+  const listeLabel = s.showListe ? "← Saisie" : `Tirs (${s.matchImpacts.length})`;
+  const header = renderAppHeader(m.journee + " · " + m.equipeA.nom + " vs " + m.equipeB.nom, {
+    back: "selection-match",
+    rightLink: { action: "toggle-impacts-liste", label: listeLabel }
+  });
+
+  if(s.showListe){
+    return `
+      <div class="screen-saisie-match">
+        ${header}
+        <div class="impacts-liste-wrap">
+          <div class="section-label">Tirs saisis (${s.matchImpacts.length})</div>
+          <div class="impacts-liste-body">${renderImpactsListeBody()}</div>
+        </div>
+      </div>
+    `;
+  }
 
   const resultButtons = MATCH_RESULTAT_OPTIONS.map(function(r){
     const active = s.resultat === r.value ? "active" : "";
@@ -101,6 +177,7 @@ function renderScreenSaisieMatch(){
       ${header}
       ${renderTeamRoster(m.equipeA, "a")}
       <div class="saisie-match-center">
+        ${renderEditingBanner()}
         <div class="impact-section">
           <div class="section-label">Résultat</div>
           <div class="result-buttons-2">${resultButtons}</div>
@@ -184,6 +261,72 @@ function bindScreenSaisieMatch(){
   if(cancelBtn){
     cancelBtn.addEventListener("click", handleAnnulerDernierImpactMatch);
   }
+
+  const toggleListeBtn = document.querySelector('[data-action="toggle-impacts-liste"]');
+  if(toggleListeBtn){
+    toggleListeBtn.addEventListener("click", function(evt){
+      evt.preventDefault();
+      _saisieMatchScreen.showListe = !_saisieMatchScreen.showListe;
+      refreshSaisieMatchScreen();
+    });
+  }
+
+  const retryListeBtn = document.querySelector('[data-action="retry-impacts-liste"]');
+  if(retryListeBtn){
+    retryListeBtn.addEventListener("click", loadMatchImpacts);
+  }
+
+  const cancelEditBtn = document.querySelector('[data-action="cancel-edit-impact-match"]');
+  if(cancelEditBtn){
+    cancelEditBtn.addEventListener("click", function(){
+      const s = _saisieMatchScreen;
+      s.editingImpactId = null;
+      s.editingOriginalNom = null;
+      s.resultat = null;
+      s.zoneTir = null;
+      s.zoneCage = null;
+      s.joueurId = null;
+      refreshSaisieMatchScreen();
+    });
+  }
+
+  document.querySelectorAll('[data-action="edit-impact-match"]').forEach(function(btn){
+    btn.addEventListener("click", function(){
+      const s = _saisieMatchScreen;
+      const impact = s.matchImpacts.find(function(i){ return i.id === btn.dataset.id; });
+      if(!impact) return;
+      s.editingImpactId = impact.id;
+      s.editingOriginalNom = impact.tireurs ? impact.tireurs.nom : "";
+      s.resultat = impact.resultat;
+      s.zoneTir = impact.zone_tir;
+      s.zoneCage = impact.zone_cage;
+      s.joueurId = impact.tireur_id;
+      s.showListe = false;
+      refreshSaisieMatchScreen();
+    });
+  });
+
+  document.querySelectorAll('[data-action="delete-impact-match"]').forEach(function(btn){
+    btn.addEventListener("click", function(){
+      confirmAndDelete(btn.dataset.id, btn.dataset.label, deleteImpact, function(){
+        _saisieMatchScreen.matchImpacts = _saisieMatchScreen.matchImpacts.filter(function(i){ return i.id !== btn.dataset.id; });
+        refreshSaisieMatchScreen();
+      });
+    });
+  });
+}
+
+async function loadMatchImpacts(){
+  const s = _saisieMatchScreen;
+  s.listeStatus = "loading";
+  refreshSaisieMatchScreen();
+  try{
+    s.matchImpacts = await getImpactsForMatch(state.matchCourant.id);
+    s.listeStatus = "ready";
+  }catch(e){
+    s.listeStatus = "error";
+  }
+  refreshSaisieMatchScreen();
 }
 
 function tryAutoSaveMatch(){
@@ -197,6 +340,7 @@ function tryAutoSaveMatch(){
 async function saveMatchImpact(){
   const s = _saisieMatchScreen;
   const m = state.matchCourant;
+  const editingId = s.editingImpactId;
   s.saving = true;
   s.errorMessage = null;
   refreshSaisieMatchScreen();
@@ -213,12 +357,22 @@ async function saveMatchImpact(){
   };
 
   try{
+    // Insert d'abord, delete de l'ancien ensuite si c'est une édition : en cas
+    // d'échec du delete, on garde au pire un doublon plutôt que de perdre la
+    // donnée corrigée (impacts n'autorise pas l'UPDATE côté RLS, cf. CLAUDE.md §5).
     const impact = await createImpact(payload);
-    s.lastSaved = { id: impact.id, resultat: s.resultat, zoneTir: s.zoneTir, zoneCage: s.zoneCage, joueurNom: findJoueurNom(s.joueurId) };
+    if(editingId){
+      try{ await deleteImpact(editingId); }catch(e){ /* doublon accepté plutôt que perte de donnée */ }
+      s.matchImpacts = s.matchImpacts.filter(function(i){ return i.id !== editingId; });
+    }
+    s.matchImpacts.unshift(Object.assign({}, impact, { tireurs: { nom: findJoueurNom(s.joueurId) } }));
+    s.lastSaved = { id: impact.id, resultat: s.resultat, zoneTir: s.zoneTir, zoneCage: s.zoneCage, joueurNom: findJoueurNom(s.joueurId), edited: !!editingId };
     s.resultat = null;
     s.zoneTir = null;
     s.zoneCage = null;
     s.joueurId = null;
+    s.editingImpactId = null;
+    s.editingOriginalNom = null;
     s.saving = false;
     refreshSaisieMatchScreen();
     scheduleConfirmationDismissMatch(4000);
@@ -235,6 +389,7 @@ async function handleAnnulerDernierImpactMatch(){
   const id = s.lastSaved.id;
   try{
     await deleteImpact(id);
+    s.matchImpacts = s.matchImpacts.filter(function(i){ return i.id !== id; });
     s.lastSaved = { cancelled: true };
     refreshSaisieMatchScreen();
     scheduleConfirmationDismissMatch(2000);
@@ -255,10 +410,13 @@ function onMountScreenSaisieMatch(){
   clearTimeout(_confirmationTimerMatch);
   _saisieMatchScreen = {
     resultat: null, zoneTir: null, zoneCage: null, joueurId: null,
-    saving: false, errorMessage: null, lastSaved: null
+    saving: false, errorMessage: null, lastSaved: null,
+    showListe: false, listeStatus: "idle", matchImpacts: [],
+    editingImpactId: null, editingOriginalNom: null
   };
   if(!state.matchCourant) return;
   bindScreenSaisieMatch();
+  loadMatchImpacts();
 }
 
 registerScreen("saisie-match", renderScreenSaisieMatch, onMountScreenSaisieMatch);

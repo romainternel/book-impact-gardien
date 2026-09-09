@@ -143,6 +143,19 @@ async function deleteImpact(id){
   if(error) throw error;
 }
 
+// Mode Match — liste des impacts déjà saisis pour ce match (avec le nom du
+// tireur) pour l'écran de gestion permettant de corriger/supprimer un tir
+// après coup (au-delà de la fenêtre de 4s du bouton "Annuler" du dernier tir).
+async function getImpactsForMatch(matchId){
+  const { data, error } = await supabaseClient
+    .from("impacts")
+    .select("*, tireurs(nom)")
+    .eq("match_id", matchId)
+    .order("created_at", { ascending: false });
+  if(error) throw error;
+  return data;
+}
+
 // Pour préremplir type_tir/main sur l'écran de saisie (cf. STORY-06a).
 async function getLastImpact(gardienId, tireurId){
   const { data, error } = await supabaseClient

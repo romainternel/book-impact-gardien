@@ -460,6 +460,16 @@ button{
   opacity: .7;
   pointer-events: none;
 }
+/* Listing des tirs saisis pour ce match (correction/suppression a posteriori,
+   retour utilisateur 2026-09-09). Seul enfant direct de .screen-saisie-match
+   dans cet état — grid-column:1/-1 pour occuper toute la largeur quel que
+   soit le nombre de colonnes du palier responsive courant (STORY-18a). */
+.screen-saisie-match .impacts-liste-wrap{ grid-column: 1 / -1; }
+.impacts-liste-body{ margin-top: 4px; }
+.impact-row{ display: flex; flex-direction: column; gap: 4px; }
+.impact-row-top{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.impact-row-joueur{ font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.impact-row-zones{ color: var(--t2); font-size: 12px; font-weight: 600; }
 @media (min-width: 480px) and (max-width: 759.98px){
   .screen-saisie-match{ grid-template-columns: 1fr 1fr; }
   .screen-saisie-match .app-header{ grid-column: 1 / -1; }
