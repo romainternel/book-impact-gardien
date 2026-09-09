@@ -545,11 +545,22 @@ body:has(.screen-saisie-match) #app{
   background: linear-gradient(115deg, rgba(255,255,255,.07) 0%, transparent 32%);
   pointer-events: none;
 }
+/* .gz-cell (vendor) a un fond opaque (background: var(--bg3)) qui recouvre
+   entièrement la texture de filet posée sur .goal-zone-grid ci-dessus — sans
+   cette surcharge, le filet n'est visible qu'à travers le fond semi-
+   transparent de .active, jamais sur les 8 autres cases. On réapplique donc
+   le motif directement sur chaque case (fond toujours semi-transparent pour
+   laisser transparaître l'ombrage du conteneur en dessous). */
 .goal-frame .gz-cell{
+  background-color: rgba(26,39,51,.65);
+  background-image:
+    repeating-linear-gradient(45deg, var(--goal-net-line) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(-45deg, var(--goal-net-line) 0 1px, transparent 1px 10px);
   text-shadow: 0 0 6px rgba(95,168,211,.35);
-  transition: transform .15s ease, color .15s, text-shadow .15s;
+  transition: transform .15s ease, color .15s, text-shadow .15s, background-color .15s;
 }
 .goal-frame .gz-cell.active{
+  background-color: rgba(95,168,211,.3);
   text-shadow: 0 0 10px var(--fenix-sky), 0 0 20px rgba(95,168,211,.55);
   animation: gz-pulse 1.4s ease-in-out infinite;
 }
