@@ -147,19 +147,19 @@ function renderBookHeatmaps(){
 
   return `
     <div class="impact-section">
-      <div class="heatmap-header">
-        <div class="section-label">Zone de tir (tap pour filtrer)</div>
-        ${resetChip}
-      </div>
-      <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="book-court-svg">${courtSvgMarkup()}${renderCourtZoneHeatmap(courtData, s.filterZoneTir)}</svg></div>
-    </div>
-    <div class="impact-section">
       <div class="section-label">Zone de cage</div>
       <div class="goal-frame">
         <div class="goal-frame-bar"></div>
         <div class="cage-heatmap-wrap">${goalZoneHeatmap(cageShots, "100%")}</div>
       </div>
       <div class="goal-frame-ground-shadow"></div>
+    </div>
+    <div class="impact-section">
+      <div class="heatmap-header">
+        <div class="section-label">Zone de tir (tap pour filtrer)</div>
+        ${resetChip}
+      </div>
+      <div class="court-pick"><svg class="court-svg-bg" viewBox="0 0 350 208" id="book-court-svg">${courtSvgMarkup()}${renderCourtZoneHeatmap(courtData, s.filterZoneTir)}</svg></div>
     </div>
   `;
 }
